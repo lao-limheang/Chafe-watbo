@@ -16,9 +16,9 @@
             theme: {
                 extend: {
                     colors: {
-                        cafe: {
-                            50: '#fdf8f6', 100: '#f2e8e5', 500: '#8c6b5d',
-                            600: '#6b4c3a', 800: '#4a3219', 900: '#2e1c0d',
+                        brand: {
+                            50: '#eff6ff', 100: '#dbeafe', 500: '#3b82f6',
+                            600: '#2563eb', 800: '#1e40af', 900: '#1e3a8a',
                         }
                     }
                 }
@@ -26,25 +26,25 @@
         }
     </script>
     <style>
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #fdf8f6; }
-        .tab-active { border-bottom: 3px solid #6b4c3a; color: #4a3219; font-weight: bold; background-color: #fdf8f6; }
-        .tab-inactive { color: #6b7280; background-color: white; }
+        body { font-family: 'Inter', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f8fafc; }
+        .tab-active { border-bottom: 3px solid #2563eb; color: #1e40af; font-weight: bold; background-color: #eff6ff; }
+        .tab-inactive { color: #64748b; background-color: white; }
         .hide-scroll::-webkit-scrollbar { display: none; }
     </style>
 </head>
-<body class="text-cafe-900 min-h-screen flex flex-col">
+<body class="text-brand-900 min-h-screen flex flex-col">
 
     <!-- Loading Screen -->
-    <div id="loading-screen" class="fixed inset-0 bg-cafe-50 flex flex-col items-center justify-center z-50">
-        <i class="fa-solid fa-mug-hot fa-bounce text-cafe-600 text-6xl mb-4"></i>
-        <h2 class="text-xl font-bold text-cafe-800">Loading System...</h2>
+    <div id="loading-screen" class="fixed inset-0 bg-brand-50 flex flex-col items-center justify-center z-50">
+        <i class="fa-solid fa-layer-group fa-bounce text-brand-600 text-6xl mb-4"></i>
+        <h2 class="text-xl font-bold text-brand-800">Loading Workspace...</h2>
     </div>
 
     <!-- 1. STAFF SCAN ENDPOINT VIEW -->
     <div id="scan-view" class="hidden flex-grow flex flex-col items-center justify-center p-6 text-center">
-        <div id="scan-status" class="bg-white p-8 rounded-2xl shadow-xl border border-cafe-100 max-w-sm w-full">
-            <i class="fa-solid fa-spinner fa-spin text-cafe-500 text-6xl mb-4"></i>
-            <h2 class="text-2xl font-bold text-cafe-800">Processing Scan...</h2>
+        <div id="scan-status" class="bg-white p-8 rounded-3xl shadow-xl border border-brand-100 max-w-sm w-full">
+            <i class="fa-solid fa-spinner fa-spin text-brand-500 text-6xl mb-4"></i>
+            <h2 class="text-2xl font-bold text-brand-800">Processing Scan...</h2>
             <p class="text-gray-500 mt-2">Recording your attendance to the server.</p>
         </div>
     </div>
@@ -52,77 +52,77 @@
     <!-- 2. ADMIN DASHBOARD VIEW -->
     <div id="admin-view" class="hidden flex-grow flex flex-col">
         <!-- Header -->
-        <header class="bg-cafe-800 text-white p-4 shadow-md flex justify-between items-center z-10 relative">
+        <header class="bg-gradient-to-r from-brand-900 to-brand-600 text-white p-4 shadow-lg flex justify-between items-center z-10 relative">
             <div>
-                <h1 class="text-xl font-bold tracking-wide"><i class="fa-solid fa-mug-hot mr-2"></i> Café Admin Pro</h1>
+                <h1 class="text-xl font-bold tracking-wide"><i class="fa-solid fa-chart-line mr-2"></i> Workspace Admin</h1>
             </div>
-            <div class="text-xs bg-cafe-900 px-3 py-1 rounded-full text-cafe-100 border border-cafe-600">
-                <i class="fa-solid fa-circle text-green-400 mr-1 text-[10px] animate-pulse"></i> Live Sync
+            <div class="text-xs bg-black/20 backdrop-blur-sm px-3 py-1.5 rounded-full text-brand-50 border border-white/10 flex items-center shadow-inner">
+                <i class="fa-solid fa-circle text-green-400 mr-2 text-[8px] animate-pulse"></i> Live Sync
             </div>
         </header>
 
         <!-- Navigation Tabs -->
-        <div class="flex border-b border-gray-200 overflow-x-auto hide-scroll shadow-sm z-0 relative">
-            <button onclick="switchTab('dashboard')" id="tab-dashboard" class="flex-1 min-w-[120px] py-3 text-center tab-active transition-colors text-sm"><i class="fa-solid fa-chart-pie mb-1 block text-lg"></i> Overview</button>
-            <button onclick="switchTab('logs')" id="tab-logs" class="flex-1 min-w-[120px] py-3 text-center tab-inactive transition-colors text-sm"><i class="fa-solid fa-list-check mb-1 block text-lg"></i> Attendance</button>
-            <button onclick="switchTab('staff')" id="tab-staff" class="flex-1 min-w-[120px] py-3 text-center tab-inactive transition-colors text-sm"><i class="fa-solid fa-users-gear mb-1 block text-lg"></i> Staff Mgmt</button>
-            <button onclick="switchTab('payroll')" id="tab-payroll" class="flex-1 min-w-[120px] py-3 text-center tab-inactive transition-colors text-sm"><i class="fa-solid fa-file-invoice-dollar mb-1 block text-lg"></i> Payroll & Roster</button>
-            <button onclick="switchTab('bot')" id="tab-bot" class="flex-1 min-w-[120px] py-3 text-center tab-inactive transition-colors text-sm"><i class="fa-solid fa-robot mb-1 block text-lg"></i> Bot Replies</button>
+        <div class="flex border-b border-gray-200 overflow-x-auto hide-scroll shadow-sm z-0 relative bg-white">
+            <button onclick="switchTab('dashboard')" id="tab-dashboard" class="flex-1 min-w-[120px] py-3 text-center tab-active transition-colors text-sm hover:bg-brand-50"><i class="fa-solid fa-chart-pie mb-1 block text-lg"></i> Overview</button>
+            <button onclick="switchTab('logs')" id="tab-logs" class="flex-1 min-w-[120px] py-3 text-center tab-inactive transition-colors text-sm hover:bg-brand-50"><i class="fa-solid fa-list-check mb-1 block text-lg"></i> Attendance</button>
+            <button onclick="switchTab('staff')" id="tab-staff" class="flex-1 min-w-[120px] py-3 text-center tab-inactive transition-colors text-sm hover:bg-brand-50"><i class="fa-solid fa-users-gear mb-1 block text-lg"></i> Staff Mgmt</button>
+            <button onclick="switchTab('payroll')" id="tab-payroll" class="flex-1 min-w-[120px] py-3 text-center tab-inactive transition-colors text-sm hover:bg-brand-50"><i class="fa-solid fa-file-invoice-dollar mb-1 block text-lg"></i> Payroll & Roster</button>
+            <button onclick="switchTab('bot')" id="tab-bot" class="flex-1 min-w-[120px] py-3 text-center tab-inactive transition-colors text-sm hover:bg-brand-50"><i class="fa-solid fa-robot mb-1 block text-lg"></i> Bot Replies</button>
         </div>
 
-        <main class="p-4 max-w-5xl mx-auto w-full">
+        <main class="p-4 max-w-6xl mx-auto w-full">
             
             <!-- SECTION: DASHBOARD OVERVIEW -->
             <div id="section-dashboard" class="space-y-6">
                 <div class="flex flex-col sm:flex-row justify-between items-start sm:items-end mb-2 gap-3">
-                    <h2 class="text-2xl font-black text-cafe-800">Today's Overview</h2>
-                    <button onclick="window.broadcastDailySummary()" class="bg-[#0088cc] text-white px-3 py-2 rounded-lg text-sm font-bold shadow hover:bg-[#006699] transition-colors">
+                    <h2 class="text-2xl font-black text-slate-800 tracking-tight">Today's Overview</h2>
+                    <button onclick="window.broadcastDailySummary()" class="bg-[#0088cc] text-white px-4 py-2 rounded-xl text-sm font-bold shadow-md hover:bg-[#006699] transition-transform hover:scale-105">
                         <i class="fa-solid fa-paper-plane mr-1"></i> Send Daily Summary
                     </button>
                 </div>
                 
                 <!-- Stats Grid -->
                 <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
-                    <div class="bg-white p-4 rounded-xl shadow-sm border-l-4 border-blue-500">
-                        <div class="text-gray-500 text-xs font-bold uppercase tracking-wider mb-1">Total Staff</div>
-                        <div id="stat-total-staff" class="text-3xl font-black text-cafe-900">0</div>
+                    <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-100 border-l-4 border-l-blue-500 hover:shadow-md transition-shadow">
+                        <div class="text-slate-400 text-xs font-bold uppercase tracking-wider mb-1">Total Staff</div>
+                        <div id="stat-total-staff" class="text-4xl font-black text-slate-800">0</div>
                     </div>
-                    <div class="bg-white p-4 rounded-xl shadow-sm border-l-4 border-green-500">
-                        <div class="text-gray-500 text-xs font-bold uppercase tracking-wider mb-1">Present Today</div>
-                        <div id="stat-present" class="text-3xl font-black text-green-600">0</div>
+                    <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-100 border-l-4 border-l-emerald-500 hover:shadow-md transition-shadow">
+                        <div class="text-slate-400 text-xs font-bold uppercase tracking-wider mb-1">Present Today</div>
+                        <div id="stat-present" class="text-4xl font-black text-emerald-600">0</div>
                     </div>
-                    <div class="bg-white p-4 rounded-xl shadow-sm border-l-4 border-red-500">
-                        <div class="text-gray-500 text-xs font-bold uppercase tracking-wider mb-1">Late Today</div>
-                        <div id="stat-late" class="text-3xl font-black text-red-600">0</div>
+                    <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-100 border-l-4 border-l-rose-500 hover:shadow-md transition-shadow">
+                        <div class="text-slate-400 text-xs font-bold uppercase tracking-wider mb-1">Late Today</div>
+                        <div id="stat-late" class="text-4xl font-black text-rose-600">0</div>
                     </div>
-                    <div class="bg-white p-4 rounded-xl shadow-sm border-l-4 border-orange-500">
-                        <div class="text-gray-500 text-xs font-bold uppercase tracking-wider mb-1">Absent</div>
-                        <div id="stat-absent" class="text-3xl font-black text-orange-600">0</div>
+                    <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-100 border-l-4 border-l-amber-500 hover:shadow-md transition-shadow">
+                        <div class="text-slate-400 text-xs font-bold uppercase tracking-wider mb-1">Absent</div>
+                        <div id="stat-absent" class="text-4xl font-black text-amber-500">0</div>
                     </div>
                 </div>
 
                 <!-- Performance & Evaluation -->
-                <div class="bg-white p-5 rounded-xl shadow-sm border border-cafe-100 overflow-hidden">
-                    <div class="flex justify-between items-center mb-4 border-b pb-3">
+                <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
+                    <div class="flex justify-between items-center mb-5 border-b border-slate-100 pb-4">
                         <div>
-                            <h2 class="font-bold text-cafe-800 text-lg"><i class="fa-solid fa-star-half-stroke mr-2 text-yellow-500"></i> Staff Performance Evaluation</h2>
-                            <p class="text-xs text-gray-500 mt-1">Evaluated based on Monthly Late instances (Good, Nice, Bad)</p>
+                            <h2 class="font-bold text-slate-800 text-lg"><i class="fa-solid fa-star-half-stroke mr-2 text-yellow-500"></i> Staff Performance Evaluation</h2>
+                            <p class="text-xs text-slate-500 mt-1">Evaluated based on Monthly Late instances (Good, Nice, Bad)</p>
                         </div>
-                        <button onclick="window.broadcastPerformanceToTelegram()" class="bg-[#0088cc] text-white px-3 py-2 rounded-lg text-sm font-bold shadow hover:bg-[#006699] transition-colors">
+                        <button onclick="window.broadcastPerformanceToTelegram()" class="bg-brand-50 text-brand-700 hover:bg-brand-100 border border-brand-200 px-4 py-2 rounded-xl text-sm font-bold shadow-sm transition-colors">
                             <i class="fa-solid fa-paper-plane mr-1"></i> Send Report
                         </button>
                     </div>
                     <div class="overflow-x-auto">
                         <table class="w-full text-left text-sm">
-                            <thead class="bg-gray-50 text-gray-600 font-semibold border-b">
+                            <thead class="bg-slate-50 text-slate-600 font-semibold border-b border-slate-200">
                                 <tr>
-                                    <th class="p-3">Staff Member</th>
-                                    <th class="p-3">This Week <span class="text-xs font-normal">(Present/Late)</span></th>
-                                    <th class="p-3">This Month <span class="text-xs font-normal">(Present/Late)</span></th>
-                                    <th class="p-3">Evaluation</th>
+                                    <th class="p-4 rounded-tl-lg">Staff Member</th>
+                                    <th class="p-4">This Week <span class="text-xs font-normal text-slate-400">(Present/Late)</span></th>
+                                    <th class="p-4">This Month <span class="text-xs font-normal text-slate-400">(Present/Late)</span></th>
+                                    <th class="p-4 rounded-tr-lg">Evaluation</th>
                                 </tr>
                             </thead>
-                            <tbody id="performance-table-body" class="divide-y divide-gray-100">
+                            <tbody id="performance-table-body" class="divide-y divide-slate-100">
                                 <!-- Injected via JS -->
                             </tbody>
                         </table>
@@ -130,12 +130,12 @@
                 </div>
 
                 <!-- Recent Activity Preview -->
-                <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
-                    <div class="bg-gray-50 px-4 py-3 border-b border-gray-100 font-bold text-cafe-800 flex justify-between">
-                        <span><i class="fa-solid fa-bolt mr-2 text-yellow-500"></i>Live Activity Feed</span>
-                        <button onclick="switchTab('logs')" class="text-xs text-cafe-600 hover:underline">View All</button>
+                <div class="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
+                    <div class="bg-slate-50 px-5 py-4 border-b border-slate-100 font-bold text-slate-800 flex justify-between items-center">
+                        <span class="flex items-center"><i class="fa-solid fa-bolt mr-2 text-amber-500"></i> Live Activity Feed</span>
+                        <button onclick="switchTab('logs')" class="text-xs text-brand-600 font-semibold hover:underline bg-brand-50 px-3 py-1 rounded-full">View All Logs</button>
                     </div>
-                    <div id="dashboard-feed" class="p-4 space-y-3">
+                    <div id="dashboard-feed" class="p-5 space-y-4">
                         <!-- Feed injected here -->
                     </div>
                 </div>
@@ -143,20 +143,21 @@
 
             <!-- SECTION: LOGS -->
             <div id="section-logs" class="hidden space-y-4">
-                <div class="bg-white p-5 rounded-xl shadow-sm border border-cafe-100">
-                    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 border-b pb-2 gap-3">
-                        <h2 class="font-bold text-cafe-800 text-lg"><i class="fa-solid fa-clock-rotate-left mr-2"></i> Attendance Logbook</h2>
-                        <div class="flex gap-4 items-center">
-                            <label class="flex items-center gap-2 text-sm cursor-pointer text-gray-600 font-semibold select-none">
-                                <input type="checkbox" id="selectAllLogs" onclick="window.toggleSelectAllLogs(this)" class="w-4 h-4 rounded border-gray-300 text-cafe-600">
+                <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
+                    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-5 border-b border-slate-100 pb-4 gap-4">
+                        <h2 class="font-bold text-slate-800 text-lg"><i class="fa-solid fa-clock-rotate-left mr-2 text-brand-500"></i> Attendance Logbook</h2>
+                        <div class="flex gap-4 items-center bg-slate-50 px-4 py-2 rounded-xl border border-slate-200">
+                            <label class="flex items-center gap-2 text-sm cursor-pointer text-slate-700 font-semibold select-none">
+                                <input type="checkbox" id="selectAllLogs" onclick="window.toggleSelectAllLogs(this)" class="w-4 h-4 rounded border-slate-300 text-brand-600 focus:ring-brand-500">
                                 Select All
                             </label>
-                            <button onclick="window.deleteSelectedLogs()" class="bg-red-50 text-red-600 px-3 py-1.5 rounded-lg text-sm font-bold border border-red-200 hover:bg-red-100 transition-colors disabled:opacity-50 disabled:cursor-not-allowed" id="btn-delete-selected" disabled>
-                                <i class="fa-solid fa-trash mr-1"></i> Delete Selected
+                            <div class="w-px h-6 bg-slate-300"></div>
+                            <button onclick="window.deleteSelectedLogs()" class="text-rose-600 text-sm font-bold hover:text-rose-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center" id="btn-delete-selected" disabled>
+                                <i class="fa-solid fa-trash mr-1.5"></i> Delete
                             </button>
                         </div>
                     </div>
-                    <div id="logs-container" class="space-y-2 max-h-[70vh] overflow-y-auto pr-2">
+                    <div id="logs-container" class="space-y-3 max-h-[70vh] overflow-y-auto pr-2 custom-scrollbar">
                         <!-- Logs will be injected here -->
                     </div>
                 </div>
@@ -165,15 +166,15 @@
             <!-- SECTION: STAFF MANAGEMENT -->
             <div id="section-staff" class="hidden space-y-6">
                 <!-- Add Staff Header -->
-                <div class="flex justify-between items-center">
-                    <h2 class="text-xl font-bold text-cafe-800">Manage Team</h2>
-                    <button onclick="openStaffModal()" class="bg-cafe-600 text-white px-4 py-2 rounded-lg font-bold shadow hover:bg-cafe-800 transition-colors">
-                        <i class="fa-solid fa-plus mr-1"></i> Add Staff
+                <div class="flex justify-between items-center bg-white p-5 rounded-2xl shadow-sm border border-slate-100">
+                    <h2 class="text-xl font-bold text-slate-800 tracking-tight"><i class="fa-solid fa-users mr-2 text-brand-500"></i> Manage Team</h2>
+                    <button onclick="openStaffModal()" class="bg-brand-600 text-white px-5 py-2.5 rounded-xl font-bold shadow-md hover:bg-brand-700 transition-all hover:scale-105">
+                        <i class="fa-solid fa-user-plus mr-2"></i> Add Staff
                     </button>
                 </div>
 
                 <!-- Staff List -->
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4" id="staff-container">
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5" id="staff-container">
                     <!-- Staff Cards Injected Here -->
                 </div>
             </div>
@@ -182,37 +183,37 @@
             <div id="section-payroll" class="hidden space-y-6">
                 
                 <!-- Chart Area -->
-                <div class="bg-white p-5 rounded-xl shadow-sm border border-cafe-100">
-                    <h2 class="font-bold text-cafe-800 text-lg mb-4"><i class="fa-solid fa-chart-column mr-2"></i> Payroll Overview Chart</h2>
-                    <div class="relative h-64 w-full">
+                <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
+                    <h2 class="font-bold text-slate-800 text-lg mb-5"><i class="fa-solid fa-chart-column mr-2 text-brand-500"></i> Payroll Overview Chart</h2>
+                    <div class="relative h-72 w-full">
                         <canvas id="payrollChart"></canvas>
                     </div>
                 </div>
 
                 <!-- Payroll Table -->
-                <div class="bg-white p-5 rounded-xl shadow-sm border border-cafe-100 overflow-hidden">
-                    <div class="flex justify-between items-end mb-4 border-b pb-4">
+                <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
+                    <div class="flex justify-between items-end mb-5 border-b border-slate-100 pb-4">
                         <div>
-                            <h2 class="font-bold text-cafe-800 text-lg"><i class="fa-solid fa-money-check-dollar mr-2"></i> Monthly Payroll Estimate</h2>
-                            <p class="text-xs text-gray-500 mt-1">Based on check-ins and approved day-offs.</p>
+                            <h2 class="font-bold text-slate-800 text-lg"><i class="fa-solid fa-money-check-dollar mr-2 text-emerald-500"></i> Monthly Payroll Estimate</h2>
+                            <p class="text-xs text-slate-500 mt-1">Based on check-ins and approved day-offs.</p>
                         </div>
-                        <div class="text-sm font-bold bg-cafe-100 text-cafe-800 px-3 py-1 rounded-full" id="payroll-month-label">
+                        <div class="text-sm font-bold bg-brand-50 text-brand-700 border border-brand-200 px-4 py-1.5 rounded-full shadow-sm" id="payroll-month-label">
                             Month
                         </div>
                     </div>
                     
                     <div class="overflow-x-auto">
                         <table class="w-full text-left text-sm">
-                            <thead class="bg-gray-50 text-gray-600 font-semibold border-b">
+                            <thead class="bg-slate-50 text-slate-600 font-semibold border-b border-slate-200">
                                 <tr>
-                                    <th class="p-3">Staff Name</th>
-                                    <th class="p-3">Base Salary</th>
-                                    <th class="p-3">Days Present</th>
-                                    <th class="p-3">Paid Day-Offs</th>
-                                    <th class="p-3 text-right">Est. Earnings</th>
+                                    <th class="p-4 rounded-tl-lg">Staff Name</th>
+                                    <th class="p-4">Base Salary</th>
+                                    <th class="p-4">Days Present</th>
+                                    <th class="p-4">Paid Day-Offs</th>
+                                    <th class="p-4 text-right rounded-tr-lg">Est. Earnings</th>
                                 </tr>
                             </thead>
-                            <tbody id="payroll-table-body" class="divide-y divide-gray-100">
+                            <tbody id="payroll-table-body" class="divide-y divide-slate-100">
                                 <!-- Payroll rows injected here -->
                             </tbody>
                         </table>
@@ -220,28 +221,28 @@
                 </div>
 
                 <!-- Day Off Roster -->
-                <div class="bg-white p-5 rounded-xl shadow-sm border border-cafe-100">
-                    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 border-b pb-4 gap-3">
+                <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
+                    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-5 border-b border-slate-100 pb-4 gap-4">
                         <div>
-                            <h2 class="font-bold text-cafe-800 text-lg"><i class="fa-solid fa-calendar-day mr-2"></i> Day-Off Roster</h2>
-                            <p class="text-xs text-gray-500 mt-1">Manage approved leaves and weekly off-days.</p>
+                            <h2 class="font-bold text-slate-800 text-lg"><i class="fa-solid fa-calendar-day mr-2 text-purple-500"></i> Day-Off Roster</h2>
+                            <p class="text-xs text-slate-500 mt-1">Manage approved leaves and weekly off-days.</p>
                         </div>
                         <div class="flex flex-wrap gap-2">
-                            <button onclick="toggleDayoffView()" class="bg-gray-100 text-cafe-800 px-3 py-2 rounded-lg text-sm font-bold shadow-sm hover:bg-gray-200 transition-colors border border-gray-200">
+                            <button onclick="toggleDayoffView()" class="bg-slate-100 text-slate-700 px-4 py-2 rounded-xl text-sm font-bold shadow-sm hover:bg-slate-200 transition-colors border border-slate-200">
                                 <i id="view-toggle-icon" class="fa-solid fa-calendar mr-1"></i> <span id="view-toggle-text">Calendar View</span>
                             </button>
-                            <button onclick="broadcastRosterToTelegram()" class="bg-[#0088cc] text-white px-3 py-2 rounded-lg text-sm font-bold shadow hover:bg-[#006699] transition-colors">
+                            <button onclick="broadcastRosterToTelegram()" class="bg-[#0088cc] text-white px-4 py-2 rounded-xl text-sm font-bold shadow hover:bg-[#006699] transition-colors">
                                 <i class="fa-solid fa-paper-plane mr-1"></i> Send to Telegram
                             </button>
-                            <button onclick="openAutoDayoffModal()" class="bg-purple-600 text-white px-3 py-2 rounded-lg text-sm font-bold shadow hover:bg-purple-800 transition-colors">
+                            <button onclick="openAutoDayoffModal()" class="bg-purple-600 text-white px-4 py-2 rounded-xl text-sm font-bold shadow hover:bg-purple-700 transition-colors">
                                 <i class="fa-solid fa-wand-magic-sparkles mr-1"></i> Auto-Generate
                             </button>
-                            <button onclick="openDayoffModal()" class="bg-blue-600 text-white px-3 py-2 rounded-lg text-sm font-bold shadow hover:bg-blue-800 transition-colors">
+                            <button onclick="openDayoffModal()" class="bg-emerald-600 text-white px-4 py-2 rounded-xl text-sm font-bold shadow hover:bg-emerald-700 transition-colors">
                                 <i class="fa-solid fa-plus mr-1"></i> Assign 1 Day
                             </button>
                         </div>
                     </div>
-                    <div id="dayoff-container" class="space-y-2">
+                    <div id="dayoff-container" class="space-y-3">
                         <!-- Day offs injected here -->
                     </div>
                     <div id="dayoff-calendar-view" class="hidden mt-4">
@@ -252,32 +253,35 @@
 
             <!-- SECTION: BOT AUTO-REPLY -->
             <div id="section-bot" class="hidden space-y-6">
-                <div class="bg-yellow-50 border-l-4 border-yellow-400 p-4 rounded text-sm text-yellow-800 shadow-sm">
-                    <p class="font-bold"><i class="fa-solid fa-triangle-exclamation mr-1"></i> Important Note for Auto-Reply:</p>
+                <div class="bg-amber-50 border-l-4 border-amber-500 p-5 rounded-2xl text-sm text-amber-900 shadow-sm">
+                    <p class="font-bold text-base mb-1"><i class="fa-solid fa-triangle-exclamation mr-2 text-amber-500"></i> Important Note for Auto-Reply:</p>
                     <p>The auto-reply system listens for commands and responds automatically <strong>only while this admin page is open in your browser</strong>. To add these commands to your bot's popup menu, message <strong>@BotFather</strong> on Telegram, type <code>/setcommands</code>, select your bot, and type your commands (e.g., <code>start - Welcome Message</code>).</p>
                 </div>
 
                 <div class="flex flex-col md:flex-row gap-6">
                     <!-- Add Command Form -->
-                    <div class="bg-white p-5 rounded-xl shadow-sm border border-cafe-100 md:w-1/3 h-fit">
-                        <h2 class="font-bold text-cafe-800 text-lg mb-4"><i class="fa-solid fa-plus-circle mr-2"></i> Add Command</h2>
+                    <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 md:w-1/3 h-fit">
+                        <h2 class="font-bold text-slate-800 text-lg mb-5"><i class="fa-solid fa-plus-circle mr-2 text-brand-500"></i> Add Command</h2>
                         <form id="bot-form" class="space-y-4">
                             <div>
-                                <label class="block text-sm font-bold text-gray-700 mb-1">Command Trigger</label>
-                                <input type="text" id="bot-command-input" placeholder="e.g. /start" class="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-cafe-500 outline-none" required>
+                                <label class="block text-sm font-bold text-slate-700 mb-1.5">Command Trigger</label>
+                                <input type="text" id="bot-command-input" placeholder="e.g. /start" class="w-full px-4 py-2.5 border border-slate-200 rounded-xl focus:ring-2 focus:ring-brand-500 outline-none bg-slate-50 transition-all" required>
                             </div>
                             <div>
-                                <label class="block text-sm font-bold text-gray-700 mb-1">Auto-Reply Text</label>
-                                <textarea id="bot-reply-input" rows="4" placeholder="Type the message the bot should reply with..." class="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-cafe-500 outline-none" required></textarea>
+                                <label class="block text-sm font-bold text-slate-700 mb-1.5">Auto-Reply Text</label>
+                                <textarea id="bot-reply-input" rows="4" placeholder="Type the message the bot should reply with..." class="w-full px-4 py-2.5 border border-slate-200 rounded-xl focus:ring-2 focus:ring-brand-500 outline-none bg-slate-50 transition-all" required></textarea>
                             </div>
-                            <button type="submit" id="bot-submit-btn" class="w-full py-2 bg-cafe-600 text-white rounded-lg font-bold hover:bg-cafe-800 transition-colors">Save Command</button>
+                            <button type="submit" id="bot-submit-btn" class="w-full py-3 bg-brand-600 text-white rounded-xl font-bold hover:bg-brand-700 shadow-md transition-all">Save Command</button>
                         </form>
                     </div>
 
                     <!-- Command List -->
-                    <div class="bg-white p-5 rounded-xl shadow-sm border border-cafe-100 md:w-2/3">
-                        <h2 class="font-bold text-cafe-800 text-lg mb-4"><i class="fa-solid fa-list mr-2"></i> Active Auto-Replies <span class="text-xs bg-green-100 text-green-700 px-2 py-1 rounded ml-2 animate-pulse"><i class="fa-solid fa-circle text-[8px]"></i> Listening</span></h2>
-                        <div id="bot-commands-container" class="space-y-3">
+                    <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 md:w-2/3">
+                        <h2 class="font-bold text-slate-800 text-lg mb-5 flex items-center">
+                            <i class="fa-solid fa-list mr-2 text-brand-500"></i> Active Auto-Replies 
+                            <span class="text-xs bg-emerald-100 text-emerald-700 px-3 py-1 rounded-full ml-3 animate-pulse border border-emerald-200 shadow-sm flex items-center"><i class="fa-solid fa-circle text-[8px] mr-1.5"></i> Listening</span>
+                        </h2>
+                        <div id="bot-commands-container" class="space-y-4">
                             <!-- Commands injected here -->
                         </div>
                     </div>
@@ -290,140 +294,144 @@
     <!-- MODALS -->
 
     <!-- Add/Edit Staff Modal -->
-    <div id="staff-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden transform transition-all">
-            <div class="bg-cafe-800 p-4 flex justify-between items-center text-white">
-                <h3 id="staff-modal-title" class="font-bold text-lg">Add New Staff</h3>
-                <button onclick="closeModal('staff-modal')" class="text-white hover:text-gray-300"><i class="fa-solid fa-xmark text-xl"></i></button>
+    <div id="staff-modal" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center z-50 p-4 transition-opacity">
+        <div class="bg-white rounded-3xl shadow-2xl w-full max-w-md overflow-hidden transform transition-all scale-100">
+            <div class="bg-brand-600 p-5 flex justify-between items-center text-white">
+                <h3 id="staff-modal-title" class="font-bold text-xl tracking-tight">Add New Staff</h3>
+                <button onclick="closeModal('staff-modal')" class="text-white/80 hover:text-white bg-white/10 hover:bg-white/20 w-8 h-8 rounded-full flex items-center justify-center transition-all"><i class="fa-solid fa-xmark"></i></button>
             </div>
-            <form id="staff-form" class="p-5 space-y-4">
+            <form id="staff-form" class="p-6 space-y-5">
                 <input type="hidden" id="staff-id-input">
                 <div>
-                    <label class="block text-sm font-bold text-gray-700 mb-1">Full Name</label>
-                    <input type="text" id="staff-name-input" class="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-cafe-500 outline-none" required>
+                    <label class="block text-sm font-bold text-slate-700 mb-1.5">Full Name</label>
+                    <input type="text" id="staff-name-input" class="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-brand-500 outline-none transition-all" required>
                 </div>
-                <div class="grid grid-cols-2 gap-4">
+                <div class="grid grid-cols-2 gap-5">
                     <div>
-                        <label class="block text-sm font-bold text-gray-700 mb-1">Shift Start</label>
-                        <input type="time" id="staff-start-input" class="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-cafe-500 outline-none" required defaultValue="06:00">
+                        <label class="block text-sm font-bold text-slate-700 mb-1.5">Shift Start</label>
+                        <input type="time" id="staff-start-input" class="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-brand-500 outline-none transition-all" required defaultValue="06:00">
                     </div>
                     <div>
-                        <label class="block text-sm font-bold text-gray-700 mb-1">Shift End</label>
-                        <input type="time" id="staff-end-input" class="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-cafe-500 outline-none" required defaultValue="15:00">
+                        <label class="block text-sm font-bold text-slate-700 mb-1.5">Shift End</label>
+                        <input type="time" id="staff-end-input" class="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-brand-500 outline-none transition-all" required defaultValue="15:00">
                     </div>
                 </div>
                 <div>
-                    <label class="block text-sm font-bold text-gray-700 mb-1">Base Salary ($ / Month)</label>
-                    <input type="number" id="staff-salary-input" placeholder="e.g. 500" class="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-cafe-500 outline-none" required>
+                    <label class="block text-sm font-bold text-slate-700 mb-1.5">Base Salary ($ / Month)</label>
+                    <input type="number" id="staff-salary-input" placeholder="e.g. 500" class="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-brand-500 outline-none transition-all" required>
                 </div>
-                <div class="pt-4 flex gap-3">
-                    <button type="button" onclick="closeModal('staff-modal')" class="flex-1 py-2 bg-gray-200 text-gray-800 rounded-lg font-bold hover:bg-gray-300">Cancel</button>
-                    <button type="submit" id="staff-submit-btn" class="flex-1 py-2 bg-cafe-600 text-white rounded-lg font-bold hover:bg-cafe-800">Save Staff</button>
+                <div class="pt-5 flex gap-4">
+                    <button type="button" onclick="closeModal('staff-modal')" class="flex-1 py-3 bg-slate-100 text-slate-700 rounded-xl font-bold hover:bg-slate-200 transition-colors">Cancel</button>
+                    <button type="submit" id="staff-submit-btn" class="flex-1 py-3 bg-brand-600 text-white rounded-xl font-bold shadow-md hover:bg-brand-700 transition-colors">Save Staff</button>
                 </div>
             </form>
         </div>
     </div>
 
     <!-- Assign Day Off Modal -->
-    <div id="dayoff-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden transform transition-all">
-            <div class="bg-blue-600 p-4 flex justify-between items-center text-white">
-                <h3 class="font-bold text-lg">Assign Day-Off</h3>
-                <button onclick="closeModal('dayoff-modal')" class="text-white hover:text-gray-300"><i class="fa-solid fa-xmark text-xl"></i></button>
+    <div id="dayoff-modal" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+        <div class="bg-white rounded-3xl shadow-2xl w-full max-w-md overflow-hidden transform transition-all">
+            <div class="bg-emerald-600 p-5 flex justify-between items-center text-white">
+                <h3 class="font-bold text-xl tracking-tight">Assign Day-Off</h3>
+                <button onclick="closeModal('dayoff-modal')" class="text-white/80 hover:text-white bg-white/10 hover:bg-white/20 w-8 h-8 rounded-full flex items-center justify-center transition-all"><i class="fa-solid fa-xmark"></i></button>
             </div>
-            <form id="dayoff-form" class="p-5 space-y-4">
+            <form id="dayoff-form" class="p-6 space-y-5">
                 <div>
-                    <label class="block text-sm font-bold text-gray-700 mb-1">Select Staff</label>
-                    <select id="dayoff-staff-input" class="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none" required></select>
+                    <label class="block text-sm font-bold text-slate-700 mb-1.5">Select Staff</label>
+                    <select id="dayoff-staff-input" class="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-emerald-500 outline-none transition-all" required></select>
                 </div>
                 <div>
-                    <label class="block text-sm font-bold text-gray-700 mb-1">Date</label>
-                    <input type="date" id="dayoff-date-input" class="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none" required>
+                    <label class="block text-sm font-bold text-slate-700 mb-1.5">Date</label>
+                    <input type="date" id="dayoff-date-input" class="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-emerald-500 outline-none transition-all" required>
                 </div>
                 <div>
-                    <label class="block text-sm font-bold text-gray-700 mb-1">Reason (Optional)</label>
-                    <input type="text" id="dayoff-reason-input" placeholder="e.g. Weekly off, Sick leave" class="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none">
+                    <label class="block text-sm font-bold text-slate-700 mb-1.5">Reason (Optional)</label>
+                    <input type="text" id="dayoff-reason-input" placeholder="e.g. Weekly off, Sick leave" class="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-emerald-500 outline-none transition-all">
                 </div>
-                <div class="pt-4 flex gap-3">
-                    <button type="button" onclick="closeModal('dayoff-modal')" class="flex-1 py-2 bg-gray-200 text-gray-800 rounded-lg font-bold hover:bg-gray-300">Cancel</button>
-                    <button type="submit" id="dayoff-submit-btn" class="flex-1 py-2 bg-blue-600 text-white rounded-lg font-bold hover:bg-blue-800">Assign</button>
+                <div class="pt-5 flex gap-4">
+                    <button type="button" onclick="closeModal('dayoff-modal')" class="flex-1 py-3 bg-slate-100 text-slate-700 rounded-xl font-bold hover:bg-slate-200 transition-colors">Cancel</button>
+                    <button type="submit" id="dayoff-submit-btn" class="flex-1 py-3 bg-emerald-600 text-white rounded-xl font-bold shadow-md hover:bg-emerald-700 transition-colors">Assign</button>
                 </div>
             </form>
         </div>
     </div>
 
     <!-- Auto-Generate Day Off Modal -->
-    <div id="auto-dayoff-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden transform transition-all">
-            <div class="bg-purple-600 p-4 flex justify-between items-center text-white">
-                <h3 class="font-bold text-lg">Auto-Generate Day-Offs</h3>
-                <button onclick="closeModal('auto-dayoff-modal')" class="text-white hover:text-gray-300"><i class="fa-solid fa-xmark text-xl"></i></button>
+    <div id="auto-dayoff-modal" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+        <div class="bg-white rounded-3xl shadow-2xl w-full max-w-md overflow-hidden transform transition-all">
+            <div class="bg-purple-600 p-5 flex justify-between items-center text-white">
+                <h3 class="font-bold text-xl tracking-tight">Auto-Generate Day-Offs</h3>
+                <button onclick="closeModal('auto-dayoff-modal')" class="text-white/80 hover:text-white bg-white/10 hover:bg-white/20 w-8 h-8 rounded-full flex items-center justify-center transition-all"><i class="fa-solid fa-xmark"></i></button>
             </div>
-            <form id="auto-dayoff-form" class="p-5 space-y-4">
+            <form id="auto-dayoff-form" class="p-6 space-y-4">
+                <div class="bg-amber-50 border border-amber-200 p-3 rounded-xl text-sm text-amber-800 shadow-sm flex items-start gap-2 mb-2">
+                    <i class="fa-solid fa-triangle-exclamation mt-0.5 text-amber-500"></i> 
+                    <div><strong>Warm Warning:</strong> Sat and Sun no dayoff. The system will auto-skip weekends.</div>
+                </div>
                 <div>
-                    <label class="block text-sm font-bold text-gray-700 mb-1">Select Staff</label>
-                    <select id="auto-dayoff-staff" class="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-purple-500 outline-none" required></select>
+                    <label class="block text-sm font-bold text-slate-700 mb-1.5">Select Staff</label>
+                    <select id="auto-dayoff-staff" class="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-purple-500 outline-none transition-all" required></select>
                 </div>
-                <div class="grid grid-cols-2 gap-4">
+                <div class="grid grid-cols-2 gap-5">
                     <div>
-                        <label class="block text-sm font-bold text-gray-700 mb-1">Month</label>
-                        <input type="month" id="auto-dayoff-month" class="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-purple-500 outline-none" required>
+                        <label class="block text-sm font-bold text-slate-700 mb-1.5">Month</label>
+                        <input type="month" id="auto-dayoff-month" class="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-purple-500 outline-none transition-all" required>
                     </div>
                     <div>
-                        <label class="block text-sm font-bold text-gray-700 mb-1">Days Off</label>
-                        <input type="number" id="auto-dayoff-count" placeholder="e.g. 4" min="1" max="20" class="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-purple-500 outline-none" required>
+                        <label class="block text-sm font-bold text-slate-700 mb-1.5">Days Off</label>
+                        <input type="number" id="auto-dayoff-count" placeholder="e.g. 4" min="1" max="20" class="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-purple-500 outline-none transition-all" required>
                     </div>
                 </div>
-                <div class="pt-4 flex gap-3">
-                    <button type="button" onclick="closeModal('auto-dayoff-modal')" class="flex-1 py-2 bg-gray-200 text-gray-800 rounded-lg font-bold hover:bg-gray-300">Cancel</button>
-                    <button type="submit" id="auto-dayoff-submit-btn" class="flex-1 py-2 bg-purple-600 text-white rounded-lg font-bold hover:bg-purple-800">Generate</button>
+                <div class="pt-5 flex gap-4">
+                    <button type="button" onclick="closeModal('auto-dayoff-modal')" class="flex-1 py-3 bg-slate-100 text-slate-700 rounded-xl font-bold hover:bg-slate-200 transition-colors">Cancel</button>
+                    <button type="submit" id="auto-dayoff-submit-btn" class="flex-1 py-3 bg-purple-600 text-white rounded-xl font-bold shadow-md hover:bg-purple-700 transition-colors">Generate</button>
                 </div>
             </form>
         </div>
     </div>
 
     <!-- Edit Log Modal -->
-    <div id="edit-log-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden transform transition-all">
-            <div class="bg-cafe-800 p-4 flex justify-between items-center text-white">
-                <h3 class="font-bold text-lg">Edit Activity Log</h3>
-                <button onclick="closeModal('edit-log-modal')" class="text-white hover:text-gray-300"><i class="fa-solid fa-xmark text-xl"></i></button>
+    <div id="edit-log-modal" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+        <div class="bg-white rounded-3xl shadow-2xl w-full max-w-md overflow-hidden transform transition-all">
+            <div class="bg-slate-800 p-5 flex justify-between items-center text-white">
+                <h3 class="font-bold text-xl tracking-tight">Edit Activity Log</h3>
+                <button onclick="closeModal('edit-log-modal')" class="text-white/80 hover:text-white bg-white/10 hover:bg-white/20 w-8 h-8 rounded-full flex items-center justify-center transition-all"><i class="fa-solid fa-xmark"></i></button>
             </div>
-            <form id="edit-log-form" class="p-5 space-y-4">
+            <form id="edit-log-form" class="p-6 space-y-5">
                 <input type="hidden" id="edit-log-id">
                 <div>
-                    <label class="block text-sm font-bold text-gray-700 mb-1">Action Type</label>
-                    <select id="edit-log-action" class="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-cafe-500 outline-none">
+                    <label class="block text-sm font-bold text-slate-700 mb-1.5">Action Type</label>
+                    <select id="edit-log-action" class="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-slate-500 outline-none transition-all">
                         <option value="Check-In">Check-In</option>
                         <option value="Check-Out">Check-Out</option>
                     </select>
                 </div>
                 <div>
-                    <label class="block text-sm font-bold text-gray-700 mb-1">Status Note</label>
-                    <input type="text" id="edit-log-status" class="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-cafe-500 outline-none">
+                    <label class="block text-sm font-bold text-slate-700 mb-1.5">Status Note</label>
+                    <input type="text" id="edit-log-status" class="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-slate-500 outline-none transition-all">
                 </div>
-                <div class="pt-4 flex gap-3">
-                    <button type="button" onclick="closeModal('edit-log-modal')" class="flex-1 py-2 bg-gray-200 text-gray-800 rounded-lg font-bold hover:bg-gray-300">Cancel</button>
-                    <button type="submit" id="edit-log-submit-btn" class="flex-1 py-2 bg-cafe-600 text-white rounded-lg font-bold hover:bg-cafe-800">Update Log</button>
+                <div class="pt-5 flex gap-4">
+                    <button type="button" onclick="closeModal('edit-log-modal')" class="flex-1 py-3 bg-slate-100 text-slate-700 rounded-xl font-bold hover:bg-slate-200 transition-colors">Cancel</button>
+                    <button type="submit" id="edit-log-submit-btn" class="flex-1 py-3 bg-slate-800 text-white rounded-xl font-bold shadow-md hover:bg-slate-900 transition-colors">Update Log</button>
                 </div>
             </form>
         </div>
     </div>
 
     <!-- QR Code Modal -->
-    <div id="qr-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-        <div class="bg-white rounded-2xl shadow-2xl p-6 max-w-sm w-full text-center relative">
-            <button onclick="closeModal('qr-modal')" class="absolute top-3 right-3 text-gray-400 hover:text-gray-800">
-                <i class="fa-solid fa-xmark text-xl"></i>
+    <div id="qr-modal" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+        <div class="bg-white rounded-3xl shadow-2xl p-8 max-w-sm w-full text-center relative transform transition-all scale-100 border border-slate-100">
+            <button onclick="closeModal('qr-modal')" class="absolute top-4 right-4 text-slate-400 hover:text-slate-800 bg-slate-100 hover:bg-slate-200 w-8 h-8 rounded-full flex items-center justify-center transition-all">
+                <i class="fa-solid fa-xmark"></i>
             </button>
-            <h3 id="qr-title" class="text-xl font-bold text-cafe-800 mb-1">QR Code</h3>
-            <p id="qr-subtitle" class="text-sm text-gray-500 mb-4">Scan this code</p>
+            <h3 id="qr-title" class="text-2xl font-black text-slate-800 mb-1 tracking-tight">QR Code</h3>
+            <p id="qr-subtitle" class="text-sm text-slate-500 mb-6 font-medium">Scan this code</p>
             
-            <div class="bg-gray-50 p-4 rounded-xl flex justify-center mb-4 border border-gray-100">
-                <img id="qr-image" src="" alt="QR Code" class="w-48 h-48 object-contain">
+            <div class="bg-white p-5 rounded-2xl flex justify-center mb-6 shadow-inner border border-slate-100">
+                <img id="qr-image" src="" alt="QR Code" class="w-56 h-56 object-contain rounded-lg">
             </div>
             
-            <button onclick="window.print()" class="w-full bg-cafe-600 text-white py-2 rounded-lg font-bold hover:bg-cafe-800 shadow-sm">
+            <button onclick="window.print()" class="w-full bg-slate-800 text-white py-3.5 rounded-xl font-bold hover:bg-slate-900 shadow-md transition-all hover:-translate-y-0.5 flex items-center justify-center">
                 <i class="fa-solid fa-print mr-2"></i> Print QR Code
             </button>
         </div>
@@ -519,23 +527,23 @@
 
                 sendTelegramAlert(staffData.name, actionText, isLate, statusDetail, diffMins);
 
-                const baseColor = actionCode === 'in' ? (isLate ? 'text-red-600' : 'text-green-600') : 'text-orange-600';
+                const baseColor = actionCode === 'in' ? (isLate ? 'text-rose-600' : 'text-emerald-600') : 'text-amber-600';
                 const icon = actionCode === 'in' ? 'fa-right-to-bracket' : 'fa-person-walking-arrow-right';
                 
                 statusBox.innerHTML = `
-                    <div class="mb-4 text-6xl ${baseColor}">
+                    <div class="mb-5 text-6xl ${baseColor}">
                         <i class="fa-solid ${isLate ? 'fa-triangle-exclamation animate-bounce' : icon}"></i>
                     </div>
-                    <h2 class="text-3xl font-black ${baseColor} mb-1">${actionText} Recorded!</h2>
-                    ${isLate ? `<p class="bg-red-100 text-red-800 font-bold px-3 py-1 rounded-full inline-block mb-2 text-sm uppercase">${statusDetail}</p>` : ''}
-                    <p class="text-xl font-medium text-cafe-800">${staffData.name}</p>
-                    <div class="mt-4 pt-4 border-t border-gray-100 text-sm text-gray-500">
+                    <h2 class="text-3xl font-black ${baseColor} mb-2">${actionText} Recorded!</h2>
+                    ${isLate ? `<p class="bg-rose-100 text-rose-800 font-bold px-4 py-1.5 rounded-full inline-block mb-3 text-sm uppercase shadow-sm border border-rose-200">${statusDetail}</p>` : ''}
+                    <p class="text-xl font-bold text-slate-800">${staffData.name}</p>
+                    <div class="mt-6 pt-5 border-t border-slate-100 text-sm font-medium text-slate-500">
                         ${new Date(now).toLocaleString()}
                     </div>
                 `;
 
             } catch (error) {
-                statusBox.innerHTML = `<i class="fa-solid fa-circle-xmark text-red-500 text-6xl mb-4"></i><h2 class="text-2xl font-bold text-red-700">Scan Failed</h2><p class="text-gray-700">${error.message}</p>`;
+                statusBox.innerHTML = `<i class="fa-solid fa-circle-xmark text-rose-500 text-6xl mb-4"></i><h2 class="text-2xl font-bold text-rose-700">Scan Failed</h2><p class="text-slate-700 mt-2">${error.message}</p>`;
             }
         }
 
@@ -663,39 +671,41 @@
 
             const feedContainer = document.getElementById('dashboard-feed');
             if (globalLogs.length === 0) {
-                feedContainer.innerHTML = `<div class="text-sm text-gray-500 text-center py-2">No activity yet.</div>`;
+                feedContainer.innerHTML = `<div class="text-sm text-slate-500 text-center py-6 font-medium">No activity yet today.</div>`;
             } else {
                 feedContainer.innerHTML = globalLogs.slice(0, 8).map(log => {
                     const isLate = log.status && log.status.startsWith('Late');
                     const isCheckIn = log.action === 'Check-In';
-                    const icon = isCheckIn ? 'fa-right-to-bracket text-green-500' : 'fa-person-walking-arrow-right text-orange-500';
-                    const bgBadge = isLate ? 'bg-red-100 text-red-700 border-red-200' : 'bg-gray-100 text-gray-600 border-gray-200';
+                    const icon = isCheckIn ? 'fa-right-to-bracket text-emerald-500' : 'fa-person-walking-arrow-right text-amber-500';
+                    const bgBadge = isLate ? 'bg-rose-100 text-rose-700 border-rose-200' : 'bg-slate-100 text-slate-600 border-slate-200';
                     
                     return `
-                    <div class="flex items-center justify-between group">
-                        <div class="flex items-center gap-3">
-                            <i class="fa-solid ${icon}"></i>
+                    <div class="flex items-center justify-between group py-1">
+                        <div class="flex items-center gap-4">
+                            <div class="w-10 h-10 rounded-full bg-slate-50 flex items-center justify-center border border-slate-100 shadow-sm">
+                                <i class="fa-solid ${icon}"></i>
+                            </div>
                             <div>
-                                <p class="text-sm font-bold text-cafe-900">${log.staffName}</p>
-                                <p class="text-xs text-gray-500">${new Date(log.timestamp).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</p>
+                                <p class="text-sm font-bold text-slate-800">${log.staffName}</p>
+                                <p class="text-xs text-slate-500 font-medium mt-0.5"><i class="fa-regular fa-clock mr-1"></i>${new Date(log.timestamp).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</p>
                             </div>
                         </div>
-                        <div class="flex items-center gap-2">
-                            <div class="text-[10px] font-bold uppercase tracking-wider px-2 py-1 border rounded ${bgBadge}">${isLate ? log.status : log.action}</div>
-                            <div class="opacity-0 group-hover:opacity-100 transition-opacity flex gap-1">
-                                <button onclick="window.openEditLogModal('${log.id}')" class="text-gray-400 hover:text-blue-600"><i class="fa-solid fa-pen text-xs"></i></button>
-                                <button onclick="window.deleteDataDB('logs', '${log.id}')" class="text-gray-400 hover:text-red-600"><i class="fa-solid fa-trash text-xs"></i></button>
+                        <div class="flex items-center gap-3">
+                            <div class="text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 border rounded-lg ${bgBadge} shadow-sm">${isLate ? log.status : log.action}</div>
+                            <div class="opacity-0 group-hover:opacity-100 transition-opacity flex gap-2">
+                                <button onclick="window.openEditLogModal('${log.id}')" class="text-slate-400 hover:text-brand-600 bg-slate-50 hover:bg-brand-50 w-7 h-7 rounded flex items-center justify-center border border-transparent hover:border-brand-200 transition-all"><i class="fa-solid fa-pen text-xs"></i></button>
+                                <button onclick="window.deleteDataDB('logs', '${log.id}')" class="text-slate-400 hover:text-rose-600 bg-slate-50 hover:bg-rose-50 w-7 h-7 rounded flex items-center justify-center border border-transparent hover:border-rose-200 transition-all"><i class="fa-solid fa-trash text-xs"></i></button>
                             </div>
                         </div>
                     </div>`;
-                }).join('<hr class="border-gray-100 border-dashed">');
+                }).join('<hr class="border-slate-100 border-dashed my-2">');
             }
         }
 
         function renderPerformanceOverview() {
             const tbody = document.getElementById('performance-table-body');
             if (globalStaff.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="4" class="p-4 text-center text-gray-500">No staff found.</td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="4" class="p-6 text-center text-slate-500 font-medium">No staff found.</td></tr>`;
                 return;
             }
 
@@ -720,11 +730,11 @@
 
                 // Evaluate based on Month Lates
                 let evalText = 'Good';
-                let evalClass = 'bg-green-100 text-green-800 border-green-200';
+                let evalClass = 'bg-emerald-100 text-emerald-800 border-emerald-200';
                 
                 if (monthLate >= 4) {
                     evalText = 'Bad';
-                    evalClass = 'bg-red-100 text-red-800 border-red-200';
+                    evalClass = 'bg-rose-100 text-rose-800 border-rose-200';
                 } else if (monthLate >= 2) {
                     evalText = 'Nice';
                     evalClass = 'bg-yellow-100 text-yellow-800 border-yellow-200';
@@ -738,13 +748,16 @@
                 });
 
                 html += `
-                <tr class="hover:bg-gray-50 transition-colors group">
-                    <td class="p-3 font-bold text-cafe-900 flex items-center gap-2"><i class="fa-solid fa-user text-gray-400"></i> ${staff.name}</td>
-                    <td class="p-3 text-gray-600"><span class="text-green-600 font-bold px-2">${weekLogs.length}</span> / <span class="text-red-500 font-bold px-2">${weekLate}</span></td>
-                    <td class="p-3 text-gray-600"><span class="text-green-600 font-bold px-2">${monthLogs.length}</span> / <span class="text-red-500 font-bold px-2">${monthLate}</span></td>
-                    <td class="p-3 flex justify-between items-center">
-                        <span class="${evalClass} border px-2 py-1 rounded text-xs font-bold uppercase tracking-wider">${evalText}</span>
-                        <button onclick="window.sendSinglePerformance('${staff.name}', ${monthLogs.length}, ${monthLate}, '${evalText}')" class="text-blue-500 hover:text-blue-700 opacity-0 group-hover:opacity-100 transition-opacity" title="Send Report to Telegram"><i class="fa-solid fa-paper-plane"></i></button>
+                <tr class="hover:bg-slate-50 transition-colors group">
+                    <td class="p-4 font-bold text-slate-800 flex items-center gap-3">
+                        <div class="w-8 h-8 rounded-full bg-brand-100 text-brand-600 flex items-center justify-center text-xs"><i class="fa-solid fa-user"></i></div>
+                        ${staff.name}
+                    </td>
+                    <td class="p-4 text-slate-600"><span class="text-emerald-600 font-bold px-2">${weekLogs.length}</span> / <span class="text-rose-500 font-bold px-2">${weekLate}</span></td>
+                    <td class="p-4 text-slate-600"><span class="text-emerald-600 font-bold px-2">${monthLogs.length}</span> / <span class="text-rose-500 font-bold px-2">${monthLate}</span></td>
+                    <td class="p-4 flex justify-between items-center">
+                        <span class="${evalClass} border px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider shadow-sm">${evalText}</span>
+                        <button onclick="window.sendSinglePerformance('${staff.name}', ${monthLogs.length}, ${monthLate}, '${evalText}')" class="text-brand-500 hover:text-brand-700 bg-brand-50 w-8 h-8 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all border border-brand-100 hover:border-brand-300 shadow-sm" title="Send Report to Telegram"><i class="fa-solid fa-paper-plane text-xs"></i></button>
                     </td>
                 </tr>`;
             });
@@ -755,7 +768,7 @@
         function renderLogs() {
             const container = document.getElementById('logs-container');
             if (globalLogs.length === 0) {
-                container.innerHTML = `<p class="text-gray-500 text-center py-4 text-sm italic">No records found.</p>`;
+                container.innerHTML = `<p class="text-slate-500 text-center py-6 font-medium">No records found.</p>`;
                 const btn = document.getElementById('btn-delete-selected');
                 if (btn) btn.disabled = true;
                 return;
@@ -764,26 +777,26 @@
             container.innerHTML = globalLogs.map(log => {
                 const isCheckIn = log.action === 'Check-In';
                 const isLate = log.status && log.status.startsWith('Late');
-                const borderColor = isLate ? 'border-red-300 bg-red-50' : (isCheckIn ? 'border-green-100 bg-green-50' : 'border-orange-100 bg-orange-50');
-                const textCol = isLate ? 'text-red-700' : (isCheckIn ? 'text-green-700' : 'text-orange-700');
+                const borderColor = isLate ? 'border-rose-200 bg-rose-50/50' : (isCheckIn ? 'border-emerald-200 bg-emerald-50/50' : 'border-amber-200 bg-amber-50/50');
+                const textCol = isLate ? 'text-rose-700' : (isCheckIn ? 'text-emerald-700' : 'text-amber-700');
                 
                 return `
-                <div class="flex justify-between items-center p-3 rounded-lg border ${borderColor} group">
-                    <div class="flex items-center gap-3">
-                        <input type="checkbox" class="log-checkbox w-4 h-4 rounded border-gray-300 text-cafe-600 cursor-pointer" value="${log.id}" onchange="window.updateDeleteButtonState()">
+                <div class="flex justify-between items-center p-4 rounded-2xl border ${borderColor} group hover:shadow-sm transition-shadow bg-white">
+                    <div class="flex items-center gap-4">
+                        <input type="checkbox" class="log-checkbox w-4 h-4 rounded border-slate-300 text-brand-600 focus:ring-brand-500 cursor-pointer" value="${log.id}" onchange="window.updateDeleteButtonState()">
                         <div>
-                            <div class="font-bold text-cafe-900">${log.staffName}</div>
-                            <div class="text-xs font-bold uppercase ${textCol}">${isLate ? `<i class="fa-solid fa-warning mr-1"></i> ${log.status}` : log.action}</div>
+                            <div class="font-bold text-slate-800 text-base">${log.staffName}</div>
+                            <div class="text-[10px] font-bold uppercase tracking-wider ${textCol} mt-1">${isLate ? `<i class="fa-solid fa-warning mr-1"></i> ${log.status}` : log.action}</div>
                         </div>
                     </div>
-                    <div class="flex items-center gap-4">
+                    <div class="flex items-center gap-6">
                         <div class="text-right">
-                            <div class="text-sm font-bold text-cafe-800">${new Date(log.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</div>
-                            <div class="text-xs text-gray-500">${new Date(log.timestamp).toLocaleDateString()}</div>
+                            <div class="text-sm font-black text-slate-800">${new Date(log.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</div>
+                            <div class="text-xs text-slate-500 font-medium mt-0.5">${new Date(log.timestamp).toLocaleDateString()}</div>
                         </div>
-                        <div class="opacity-0 group-hover:opacity-100 transition-opacity flex flex-col gap-1">
-                            <button onclick="window.openEditLogModal('${log.id}')" class="text-blue-500 hover:text-blue-700"><i class="fa-solid fa-pen"></i></button>
-                            <button onclick="window.deleteDataDB('logs', '${log.id}')" class="text-red-500 hover:text-red-700"><i class="fa-solid fa-trash"></i></button>
+                        <div class="opacity-0 group-hover:opacity-100 transition-opacity flex flex-col gap-1.5">
+                            <button onclick="window.openEditLogModal('${log.id}')" class="text-brand-500 hover:text-brand-700 bg-brand-50 w-7 h-7 rounded flex items-center justify-center border border-brand-100 hover:border-brand-200 transition-all"><i class="fa-solid fa-pen text-[10px]"></i></button>
+                            <button onclick="window.deleteDataDB('logs', '${log.id}')" class="text-rose-500 hover:text-rose-700 bg-rose-50 w-7 h-7 rounded flex items-center justify-center border border-rose-100 hover:border-rose-200 transition-all"><i class="fa-solid fa-trash text-[10px]"></i></button>
                         </div>
                     </div>
                 </div>`;
@@ -796,25 +809,26 @@
         function renderStaff() {
             const container = document.getElementById('staff-container');
             if (globalStaff.length === 0) {
-                container.innerHTML = `<div class="col-span-2 text-center text-gray-500 py-8">No staff added yet. Click 'Add Staff' to begin.</div>`;
+                container.innerHTML = `<div class="col-span-full text-center text-slate-500 py-10 font-medium">No staff added yet. Click 'Add Staff' to begin.</div>`;
                 return;
             }
             container.innerHTML = globalStaff.map(staff => `
-                <div class="bg-white p-4 rounded-xl shadow-sm border border-cafe-100 flex flex-col justify-between">
-                    <div class="flex justify-between items-start mb-3 border-b pb-3">
+                <div class="bg-white p-5 rounded-3xl shadow-sm border border-slate-100 flex flex-col justify-between hover:shadow-md transition-shadow relative overflow-hidden">
+                    <div class="absolute top-0 left-0 w-1 h-full bg-brand-500"></div>
+                    <div class="flex justify-between items-start mb-4 border-b border-slate-100 pb-4 pl-2">
                         <div>
-                            <div class="font-black text-lg text-cafe-900">${staff.name}</div>
-                            <div class="text-xs text-gray-500 mt-1"><i class="fa-regular fa-clock mr-1"></i> Shift: ${staff.shiftStart || '06:00'} - ${staff.shiftEnd || '15:00'}</div>
-                            <div class="text-xs text-gray-500 mt-1"><i class="fa-solid fa-dollar-sign mr-1"></i> Base: $${staff.salary || '0'}/mo</div>
+                            <div class="font-black text-lg text-slate-800 tracking-tight">${staff.name}</div>
+                            <div class="text-xs text-slate-500 font-medium mt-1.5"><i class="fa-regular fa-clock mr-1 text-slate-400"></i> ${staff.shiftStart || '06:00'} - ${staff.shiftEnd || '15:00'}</div>
+                            <div class="text-xs text-slate-500 font-medium mt-1"><i class="fa-solid fa-dollar-sign mr-1.5 text-slate-400 ml-0.5"></i> $${staff.salary || '0'}/mo</div>
                         </div>
                         <div class="flex gap-2">
-                            <button onclick="window.editStaffUI('${staff.id}')" class="text-blue-500 hover:text-blue-700 bg-blue-50 w-8 h-8 rounded-full flex items-center justify-center transition-colors"><i class="fa-solid fa-pen text-sm"></i></button>
-                            <button onclick="window.deleteDataDB('staff', '${staff.id}')" class="text-red-500 hover:text-red-700 bg-red-50 w-8 h-8 rounded-full flex items-center justify-center transition-colors"><i class="fa-solid fa-trash text-sm"></i></button>
+                            <button onclick="window.editStaffUI('${staff.id}')" class="text-brand-500 hover:text-brand-700 bg-brand-50 w-8 h-8 rounded-full flex items-center justify-center transition-all border border-brand-100 hover:border-brand-200"><i class="fa-solid fa-pen text-xs"></i></button>
+                            <button onclick="window.deleteDataDB('staff', '${staff.id}')" class="text-rose-500 hover:text-rose-700 bg-rose-50 w-8 h-8 rounded-full flex items-center justify-center transition-all border border-rose-100 hover:border-rose-200"><i class="fa-solid fa-trash text-xs"></i></button>
                         </div>
                     </div>
-                    <div class="flex gap-2 w-full mt-auto">
-                        <button onclick="window.openQrModal('${staff.id}', '${staff.name}', 'in')" class="flex-1 py-2 bg-green-50 text-green-700 border border-green-200 hover:bg-green-100 rounded-lg text-xs font-bold transition-colors"><i class="fa-solid fa-qrcode mr-1"></i> QR IN</button>
-                        <button onclick="window.openQrModal('${staff.id}', '${staff.name}', 'out')" class="flex-1 py-2 bg-orange-50 text-orange-700 border border-orange-200 hover:bg-orange-100 rounded-lg text-xs font-bold transition-colors"><i class="fa-solid fa-qrcode mr-1"></i> QR OUT</button>
+                    <div class="flex gap-3 w-full mt-auto pl-2">
+                        <button onclick="window.openQrModal('${staff.id}', '${staff.name}', 'in')" class="flex-1 py-2.5 bg-emerald-50 text-emerald-700 border border-emerald-200 hover:bg-emerald-100 rounded-xl text-xs font-black uppercase tracking-wider transition-colors shadow-sm"><i class="fa-solid fa-qrcode mr-1.5"></i> QR IN</button>
+                        <button onclick="window.openQrModal('${staff.id}', '${staff.name}', 'out')" class="flex-1 py-2.5 bg-amber-50 text-amber-700 border border-amber-200 hover:bg-amber-100 rounded-xl text-xs font-black uppercase tracking-wider transition-colors shadow-sm"><i class="fa-solid fa-qrcode mr-1.5"></i> QR OUT</button>
                     </div>
                 </div>
             `).join('');
@@ -839,7 +853,7 @@
             });
 
             if (globalStaff.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="5" class="p-4 text-center text-gray-500">No staff found.</td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="5" class="p-6 text-center text-slate-500 font-medium">No staff found.</td></tr>`;
                 if(chartInstance) chartInstance.destroy();
                 return;
             }
@@ -867,12 +881,12 @@
                 chartDays.push(totalPaidDays);
 
                 return `
-                <tr class="hover:bg-gray-50 transition-colors">
-                    <td class="p-3 font-bold text-cafe-900">${staff.name}</td>
-                    <td class="p-3 text-gray-600">$${baseSal}</td>
-                    <td class="p-3"><span class="bg-green-100 text-green-800 px-2 py-1 rounded text-xs font-bold">${daysPresent}</span></td>
-                    <td class="p-3"><span class="bg-blue-100 text-blue-800 px-2 py-1 rounded text-xs font-bold">${staffDayOffs}</span></td>
-                    <td class="p-3 text-right font-black text-cafe-800">$${estEarnings}</td>
+                <tr class="hover:bg-slate-50 transition-colors">
+                    <td class="p-4 font-bold text-slate-800">${staff.name}</td>
+                    <td class="p-4 text-slate-600 font-medium">$${baseSal}</td>
+                    <td class="p-4"><span class="bg-emerald-100 text-emerald-800 px-3 py-1 rounded-full text-xs font-bold border border-emerald-200">${daysPresent}</span></td>
+                    <td class="p-4"><span class="bg-brand-100 text-brand-800 px-3 py-1 rounded-full text-xs font-bold border border-brand-200">${staffDayOffs}</span></td>
+                    <td class="p-4 text-right font-black text-slate-800 text-base">$${estEarnings}</td>
                 </tr>`;
             }).join('');
 
@@ -888,15 +902,15 @@
                         {
                             label: 'Estimated Earnings ($)',
                             data: chartEarnings,
-                            backgroundColor: '#8c6b5d',
-                            borderRadius: 4,
+                            backgroundColor: '#3b82f6', // brand-500
+                            borderRadius: 6,
                             yAxisID: 'y'
                         },
                         {
                             label: 'Total Paid Days',
                             data: chartDays,
-                            backgroundColor: '#4ade80',
-                            borderRadius: 4,
+                            backgroundColor: '#10b981', // emerald-500
+                            borderRadius: 6,
                             yAxisID: 'y1'
                         }
                     ]
@@ -916,20 +930,23 @@
         function renderDayoffs() {
             const container = document.getElementById('dayoff-container');
             if (globalDayOffs.length === 0) {
-                container.innerHTML = `<p class="text-gray-500 text-center py-4 text-sm italic">No day-offs assigned yet.</p>`;
+                container.innerHTML = `<p class="text-slate-500 text-center py-6 font-medium">No day-offs assigned yet.</p>`;
             } else {
                 container.innerHTML = globalDayOffs.map(day => {
                     const staff = globalStaff.find(s => s.id === day.staffId);
                     const sName = staff ? staff.name : 'Unknown Staff';
                     return `
-                    <div class="flex justify-between items-center p-3 rounded-lg border border-blue-100 bg-blue-50 group">
-                        <div>
-                            <div class="font-bold text-blue-900">${sName}</div>
-                            <div class="text-xs text-blue-700">${new Date(day.date).toDateString()} <span class="text-gray-500 ml-1">- ${day.reason || 'No reason'}</span></div>
+                    <div class="flex justify-between items-center p-4 rounded-2xl border border-brand-100 bg-white shadow-sm group hover:shadow transition-shadow">
+                        <div class="flex items-center gap-3">
+                            <div class="w-8 h-8 rounded-full bg-brand-50 flex items-center justify-center text-brand-500 border border-brand-100"><i class="fa-solid fa-umbrella-beach text-[10px]"></i></div>
+                            <div>
+                                <div class="font-bold text-brand-900">${sName}</div>
+                                <div class="text-xs text-brand-700 font-medium mt-0.5">${new Date(day.date).toDateString()} <span class="text-slate-400 ml-1">- ${day.reason || 'No reason'}</span></div>
+                            </div>
                         </div>
-                        <div class="flex gap-3 opacity-0 group-hover:opacity-100 transition-opacity items-center">
-                            <button onclick="window.sendSingleDayoffToTelegram('${sName}', '${day.date}', true)" class="text-blue-500 hover:text-blue-700" title="Send Alert to Telegram"><i class="fa-solid fa-paper-plane"></i></button>
-                            <button onclick="window.deleteDataDB('dayoffs', '${day.id}')" class="text-red-400 hover:text-red-600" title="Delete"><i class="fa-solid fa-trash"></i></button>
+                        <div class="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity items-center">
+                            <button onclick="window.sendSingleDayoffToTelegram('${sName}', '${day.date}', true)" class="w-8 h-8 rounded-full bg-brand-50 hover:bg-brand-100 text-brand-600 flex items-center justify-center transition-all border border-brand-200" title="Send Alert to Telegram"><i class="fa-solid fa-paper-plane text-xs"></i></button>
+                            <button onclick="window.deleteDataDB('dayoffs', '${day.id}')" class="w-8 h-8 rounded-full bg-rose-50 hover:bg-rose-100 text-rose-600 flex items-center justify-center transition-all border border-rose-200" title="Delete"><i class="fa-solid fa-trash text-xs"></i></button>
                         </div>
                     </div>`;
                 }).join('');
@@ -947,12 +964,12 @@
             const firstDay = new Date(currentYear, currentMonth, 1).getDay();
             const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
 
-            let html = `<div class="grid grid-cols-7 gap-1 text-center text-[10px] sm:text-xs font-bold text-gray-500 mb-2">
-                <div class="text-red-500">អាទិត្យ<br>(Sun)</div><div>ចន្ទ<br>(Mon)</div><div>អង្គារ<br>(Tue)</div><div>ពុធ<br>(Wed)</div><div>ព្រហស្បតិ៍<br>(Thu)</div><div>សុក្រ<br>(Fri)</div><div class="text-red-500">សៅរ៍<br>(Sat)</div>
-            </div><div class="grid grid-cols-7 gap-1">`;
+            let html = `<div class="grid grid-cols-7 gap-1.5 text-center text-[10px] sm:text-xs font-bold text-slate-500 mb-2">
+                <div class="text-rose-500">អាទិត្យ<br>(Sun)</div><div>ចន្ទ<br>(Mon)</div><div>អង្គារ<br>(Tue)</div><div>ពុធ<br>(Wed)</div><div>ព្រហស្បតិ៍<br>(Thu)</div><div>សុក្រ<br>(Fri)</div><div class="text-rose-500">សៅរ៍<br>(Sat)</div>
+            </div><div class="grid grid-cols-7 gap-1.5">`;
 
             for(let i=0; i<firstDay; i++) {
-                html += `<div class="p-2 bg-gray-50 rounded-lg min-h-[70px]"></div>`;
+                html += `<div class="p-2 bg-slate-50 rounded-xl min-h-[80px]"></div>`;
             }
 
             for(let day=1; day<=daysInMonth; day++) {
@@ -963,14 +980,14 @@
                 
                 let badges = dayOffsToday.map(dOff => {
                     const staff = globalStaff.find(s => s.id === dOff.staffId);
-                    return `<div class="text-[10px] bg-blue-100 text-blue-800 px-1 py-0.5 rounded mt-1 truncate" title="${staff ? staff.name : 'Unknown'}">${staff ? staff.name.split(' ')[0] : '?'}</div>`;
+                    return `<div class="text-[10px] font-bold bg-brand-100 text-brand-800 px-1.5 py-0.5 rounded mt-1 truncate border border-brand-200 shadow-sm" title="${staff ? staff.name : 'Unknown'}">${staff ? staff.name.split(' ')[0] : '?'}</div>`;
                 }).join('');
 
-                const bgClass = isWeekend ? 'bg-red-50 border-red-100 opacity-60' : 'border-gray-100';
-                const textClass = isWeekend ? 'text-red-500' : 'text-gray-700';
+                const bgClass = isWeekend ? 'bg-rose-50/50 border-rose-100' : 'bg-white border-slate-200 shadow-sm';
+                const textClass = isWeekend ? 'text-rose-500' : 'text-slate-700';
 
-                html += `<div class="p-1.5 sm:p-2 border rounded-lg min-h-[70px] text-left flex flex-col ${bgClass}">
-                    <span class="font-bold text-xs ${textClass}">${day}</span>
+                html += `<div class="p-2 border rounded-xl min-h-[80px] text-left flex flex-col ${bgClass}">
+                    <span class="font-black text-xs ${textClass}">${day}</span>
                     <div class="mt-1 flex-1 space-y-1">${badges}</div>
                 </div>`;
             }
@@ -981,16 +998,16 @@
         function renderBotCommands() {
             const container = document.getElementById('bot-commands-container');
             if (globalCommands.length === 0) {
-                container.innerHTML = `<p class="text-gray-500 text-center py-4 text-sm italic">No auto-replies configured.</p>`;
+                container.innerHTML = `<p class="text-slate-500 text-center py-6 font-medium">No auto-replies configured.</p>`;
                 return;
             }
             container.innerHTML = globalCommands.map(cmd => `
-                <div class="flex justify-between items-start p-3 rounded-lg border border-gray-200 bg-gray-50 group">
+                <div class="flex justify-between items-start p-4 rounded-2xl border border-slate-200 bg-white shadow-sm group hover:shadow transition-shadow">
                     <div class="w-full">
-                        <div class="font-bold text-cafe-900 bg-cafe-100 inline-block px-2 py-1 rounded text-sm mb-2">${cmd.command}</div>
-                        <div class="text-sm text-gray-700 whitespace-pre-wrap">${cmd.replyText}</div>
+                        <div class="font-black text-brand-900 bg-brand-100 border border-brand-200 inline-block px-3 py-1 rounded-lg text-xs tracking-wider mb-3 shadow-sm">${cmd.command}</div>
+                        <div class="text-sm text-slate-700 font-medium whitespace-pre-wrap">${cmd.replyText}</div>
                     </div>
-                    <button onclick="window.deleteDataDB('bot_commands', '${cmd.id}')" class="text-red-400 hover:text-red-600 opacity-0 group-hover:opacity-100 transition-opacity ml-4"><i class="fa-solid fa-trash"></i></button>
+                    <button onclick="window.deleteDataDB('bot_commands', '${cmd.id}')" class="text-rose-400 hover:text-rose-600 bg-rose-50 hover:bg-rose-100 w-8 h-8 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all border border-rose-100 hover:border-rose-200 ml-4 shrink-0"><i class="fa-solid fa-trash text-xs"></i></button>
                 </div>`).join('');
         }
 
@@ -1004,7 +1021,7 @@
             const salary = document.getElementById('staff-salary-input').value;
 
             const btn = document.getElementById('staff-submit-btn');
-            btn.disabled = true; btn.innerText = "Saving...";
+            btn.disabled = true; btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin mr-2"></i> Saving...`;
             try {
                 const payload = { name, shiftStart: start, shiftEnd: end, salary: Number(salary) };
                 if (id) await updateDoc(doc(db, 'staff', id), payload);
@@ -1053,7 +1070,7 @@
             }
 
             const btn = document.getElementById('dayoff-submit-btn');
-            btn.disabled = true; btn.innerText = "Assigning...";
+            btn.disabled = true; btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin mr-2"></i> Assigning...`;
             try {
                 await addDoc(collection(db, 'dayoffs'), { staffId, date, reason, createdAt: Date.now() });
                 
@@ -1073,7 +1090,7 @@
             const monthInput = document.getElementById('auto-dayoff-month').value; 
             
             const btn = document.getElementById('auto-dayoff-submit-btn');
-            btn.disabled = true; btn.innerText = "Generating...";
+            btn.disabled = true; btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin mr-2"></i> Generating...`;
 
             try {
                 const [year, month] = monthInput.split('-');
@@ -1092,7 +1109,7 @@
                 }
 
                 if (availableDays.length < count) {
-                    alert(`Not enough available weekdays to generate ${count} days off.`);
+                    alert(`Not enough available weekdays to generate ${count} days off.\n\nNote: Sat and Sun are not allowed for dayoffs.`);
                     btn.disabled = false; btn.innerText = "Generate";
                     return;
                 }
@@ -1112,6 +1129,8 @@
                     // Auto alert to telegram
                     if(staff) window.sendSingleDayoffToTelegram(staff.name, dateStr, false);
                 }
+                
+                alert(`Successfully generated ${pickedDays.length} days off!\n\nNote: Sat and Sun no dayoff (skipped automatically).`);
                 closeModal('auto-dayoff-modal');
             } catch(error) {
                 alert("Error: " + error.message);
@@ -1127,7 +1146,7 @@
             const status = document.getElementById('edit-log-status').value;
             
             const btn = document.getElementById('edit-log-submit-btn');
-            btn.disabled = true; btn.innerText = "Updating...";
+            btn.disabled = true; btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin mr-2"></i> Updating...`;
             try {
                 await updateDoc(doc(db, 'logs', id), { action, status });
                 closeModal('edit-log-modal');
@@ -1141,7 +1160,7 @@
             const replyText = document.getElementById('bot-reply-input').value.trim();
             
             const btn = document.getElementById('bot-submit-btn');
-            btn.disabled = true; btn.innerText = "Saving...";
+            btn.disabled = true; btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin mr-2"></i> Saving...`;
             try {
                 // Ensure command starts with a slash if user forgot it, for standardization (optional but helpful)
                 const formattedCommand = command.startsWith('/') ? command : `/${command}`;
@@ -1189,7 +1208,7 @@
 
             const btn = document.getElementById('btn-delete-selected');
             const ogText = btn.innerHTML;
-            btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> Deleting...`;
+            btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin mr-1"></i> Deleting...`;
             btn.disabled = true;
             
             try {
@@ -1356,10 +1375,10 @@
                 if(btn) btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i>`;
                 const response = await fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ chat_id: TELEGRAM_CHAT_ID, text: text, parse_mode: 'HTML' }) });
                 if (!response.ok) throw new Error("Telegram API Error");
-                if(btn) btn.innerHTML = `<i class="fa-solid fa-check text-green-500"></i>`;
-                setTimeout(() => { if(btn) btn.innerHTML = `<i class="fa-solid fa-paper-plane"></i>`; }, 2000);
+                if(btn) btn.innerHTML = `<i class="fa-solid fa-check text-emerald-500"></i>`;
+                setTimeout(() => { if(btn) btn.innerHTML = `<i class="fa-solid fa-paper-plane text-xs"></i>`; }, 2000);
             } catch(e) {
-                if(btn) btn.innerHTML = `<i class="fa-solid fa-paper-plane"></i>`;
+                if(btn) btn.innerHTML = `<i class="fa-solid fa-paper-plane text-xs"></i>`;
                 alert("Failed to send report.");
             }
         };
@@ -1477,7 +1496,7 @@
             const baseUrl = window.location.href.split('?')[0];
             const targetUrl = `${baseUrl}?staffId=${staffId}&action=${action}`;
             document.getElementById('qr-title').innerText = staffName;
-            document.getElementById('qr-subtitle').innerHTML = `Scan to <span class="font-bold uppercase ${action === 'in' ? 'text-green-600' : 'text-orange-600'}">${action === 'in' ? 'Check-In' : 'Check-Out'}</span>`;
+            document.getElementById('qr-subtitle').innerHTML = `Scan to <span class="font-bold uppercase ${action === 'in' ? 'text-emerald-600' : 'text-amber-600'}">${action === 'in' ? 'Check-In' : 'Check-Out'}</span>`;
             document.getElementById('qr-image').src = `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(targetUrl)}`;
             modal.classList.remove('hidden');
         };
