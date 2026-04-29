@@ -422,13 +422,19 @@
         const staffIdParam = urlParams.get('staffId');
         const actionParam = urlParams.get('action');
 
-        window.onload = () => {
+        const initApp = () => {
             if (staffIdParam && actionParam) {
                 runScanEndpoint(staffIdParam, actionParam);
             } else {
                 initAdminDashboard();
             }
         };
+
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', initApp);
+        } else {
+            initApp();
+        }
 
         // --- 1. STAFF SCAN ENDPOINT LOGIC ---
         async function runScanEndpoint(id, actionCode) {
@@ -496,16 +502,16 @@
             let text = '';
             if (isLate) {
                 if (diffMins > 20) {
-                    text = `⚠️ *URGENT LATE ALERT* ⚠️\n\n🧑‍🍳 *Staff:* ${staffName}\n🔴 *Status:* Check-In (${statusDetail})\n⏰ *Time:* ${timeStr}\n\n🚨 *Please come to shop, your late ${diffMins}min!*`;
+                    text = `⚠️ <b>URGENT LATE ALERT</b> ⚠️\n\n🧑‍🍳 <b>Staff:</b> ${staffName}\n🔴 <b>Status:</b> Check-In (${statusDetail})\n⏰ <b>Time:</b> ${timeStr}\n\n🚨 <b>Please come to shop, your late ${diffMins}min!</b>`;
                 } else {
-                    text = `⚠️ *LATE ALERT* ⚠️\n\n🧑‍🍳 *Staff:* ${staffName}\n🔴 *Status:* Check-In (${statusDetail})\n⏰ *Time:* ${timeStr}`;
+                    text = `⚠️ <b>LATE ALERT</b> ⚠️\n\n🧑‍🍳 <b>Staff:</b> ${staffName}\n🔴 <b>Status:</b> Check-In (${statusDetail})\n⏰ <b>Time:</b> ${timeStr}`;
                 }
             } else {
                 const emoji = action === 'Check-In' ? '🟢' : '🟠';
-                text = `☕ *Attendance*\n\n🧑‍🍳 *Staff:* ${staffName}\n${emoji} *Status:* ${action}\n⏰ *Time:* ${timeStr}`;
+                text = `☕ <b>Attendance</b>\n\n🧑‍🍳 <b>Staff:</b> ${staffName}\n${emoji} <b>Status:</b> ${action}\n⏰ <b>Time:</b> ${timeStr}`;
             }
             const url = `https://api.telegram.org/bot${TELEGRAM_TOKEN}/sendMessage`;
-            fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ chat_id: TELEGRAM_CHAT_ID, text: text, parse_mode: 'Markdown' }) }).catch(e => console.error(e));
+            fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ chat_id: TELEGRAM_CHAT_ID, text: text, parse_mode: 'HTML' }) }).catch(e => console.error(e));
         }
 
 
@@ -525,24 +531,24 @@
                 globalStaff = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
                 populateStaffDropdown();
                 refreshAllViews();
-            });
+            }, (error) => console.error("Staff Error: ", error));
 
             onSnapshot(collection(db, 'logs'), (snapshot) => {
                 globalLogs = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
                 globalLogs.sort((a, b) => b.timestamp - a.timestamp); 
                 refreshAllViews();
-            });
+            }, (error) => console.error("Logs Error: ", error));
 
             onSnapshot(collection(db, 'dayoffs'), (snapshot) => {
                 globalDayOffs = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
                 globalDayOffs.sort((a, b) => new Date(b.date) - new Date(a.date));
                 refreshAllViews();
-            });
+            }, (error) => console.error("Dayoffs Error: ", error));
 
             onSnapshot(collection(db, 'bot_commands'), (snapshot) => {
                 globalCommands = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
                 renderBotCommands();
-            });
+            }, (error) => console.error("Bot Commands Error: ", error));
 
             // Start background Telegram listener for auto-replies
             pollTelegramUpdates();
@@ -560,7 +566,8 @@
                             lastUpdateId = update.update_id;
                             if (update.message && update.message.text) {
                                 const text = update.message.text.trim();
-                                const cmd = globalCommands.find(c => c.command === text);
+                                // Support matching commands even if tagged (e.g., /start@MyBot)
+                                const cmd = globalCommands.find(c => text.startsWith(c.command));
                                 if (cmd) {
                                     await fetch(`https://api.telegram.org/bot${TELEGRAM_TOKEN}/sendMessage`, {
                                         method: 'POST',
@@ -898,14 +905,14 @@
 
         window.sendSingleDayoffToTelegram = async (staffName, date, showSuccessAlert = false) => {
             const dateStr = new Date(date).toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
-            const text = `🏖️ *Day-Off Notice*\n\n🧑‍🍳 *Name:* ${staffName}\n🔵 *Status:* Day-Off\n📅 *Day:* ${dateStr}`;
+            const text = `🏖️ <b>Day-Off Notice</b>\n\n🧑‍🍳 <b>Name:</b> ${staffName}\n🔵 <b>Status:</b> Day-Off\n📅 <b>Day:</b> ${dateStr}`;
             const url = `https://api.telegram.org/bot${TELEGRAM_TOKEN}/sendMessage`;
             
             try {
                 const response = await fetch(url, { 
                     method: 'POST', 
                     headers: { 'Content-Type': 'application/json' }, 
-                    body: JSON.stringify({ chat_id: TELEGRAM_CHAT_ID, text: text, parse_mode: 'Markdown' }) 
+                    body: JSON.stringify({ chat_id: TELEGRAM_CHAT_ID, text: text, parse_mode: 'HTML' }) 
                 });
                 
                 if (!response.ok) {
@@ -998,7 +1005,23 @@
             } catch(error) {
                 alert("Error: " + error.message);
             } finally {
-                btn.disabled = false; btn.innerText = "Update Log"; }
+                btn.disabled = false; btn.innerText = "Generate"; 
+            }
+        }
+
+        async function handleEditLogSubmit(e) {
+            e.preventDefault();
+            const id = document.getElementById('edit-log-id').value;
+            const action = document.getElementById('edit-log-action').value;
+            const status = document.getElementById('edit-log-status').value;
+            
+            const btn = document.getElementById('edit-log-submit-btn');
+            btn.disabled = true; btn.innerText = "Updating...";
+            try {
+                await updateDoc(doc(db, 'logs', id), { action, status });
+                closeModal('edit-log-modal');
+            } catch (error) { alert("Error: " + error.message); } 
+            finally { btn.disabled = false; btn.innerText = "Update Log"; }
         }
 
         async function handleBotCommandSubmit(e) {
@@ -1067,7 +1090,7 @@
                 return;
             }
 
-            let rosterText = `📅 *Day-Off Roster for ${monthName}*\n\n`;
+            let rosterText = `📅 <b>Day-Off Roster for ${monthName}</b>\n\n`;
             
             const rosterMap = {};
             monthDayOffs.forEach(dOff => {
@@ -1080,7 +1103,7 @@
 
             for(const [staffName, days] of Object.entries(rosterMap)) {
                 days.sort((a,b) => a - b);
-                rosterText += `🧑‍🍳 *${staffName}:* ${days.join(', ')}\n`;
+                rosterText += `🧑‍🍳 <b>${staffName}:</b> ${days.join(', ')}\n`;
             }
 
             const btn = window.event ? window.event.currentTarget : null;
@@ -1096,7 +1119,7 @@
                 const response = await fetch(url, { 
                     method: 'POST', 
                     headers: { 'Content-Type': 'application/json' }, 
-                    body: JSON.stringify({ chat_id: TELEGRAM_CHAT_ID, text: rosterText, parse_mode: 'Markdown' }) 
+                    body: JSON.stringify({ chat_id: TELEGRAM_CHAT_ID, text: rosterText, parse_mode: 'HTML' }) 
                 });
                 
                 if (!response.ok) {
