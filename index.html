@@ -178,17 +178,31 @@
 
                 <!-- Day Off Roster -->
                 <div class="bg-white p-5 rounded-xl shadow-sm border border-cafe-100">
-                    <div class="flex justify-between items-center mb-4 border-b pb-4">
+                    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 border-b pb-4 gap-3">
                         <div>
                             <h2 class="font-bold text-cafe-800 text-lg"><i class="fa-solid fa-calendar-day mr-2"></i> Day-Off Roster</h2>
                             <p class="text-xs text-gray-500 mt-1">Manage approved leaves and weekly off-days.</p>
                         </div>
-                        <button onclick="openDayoffModal()" class="bg-blue-600 text-white px-3 py-2 rounded-lg text-sm font-bold shadow hover:bg-blue-800 transition-colors">
-                            <i class="fa-solid fa-plus mr-1"></i> Assign Day-Off
-                        </button>
+                        <div class="flex flex-wrap gap-2">
+                            <button onclick="toggleDayoffView()" class="bg-gray-100 text-cafe-800 px-3 py-2 rounded-lg text-sm font-bold shadow-sm hover:bg-gray-200 transition-colors border border-gray-200">
+                                <i id="view-toggle-icon" class="fa-solid fa-calendar mr-1"></i> <span id="view-toggle-text">Calendar View</span>
+                            </button>
+                            <button onclick="broadcastRosterToTelegram()" class="bg-[#0088cc] text-white px-3 py-2 rounded-lg text-sm font-bold shadow hover:bg-[#006699] transition-colors">
+                                <i class="fa-solid fa-paper-plane mr-1"></i> Send to Telegram
+                            </button>
+                            <button onclick="openAutoDayoffModal()" class="bg-purple-600 text-white px-3 py-2 rounded-lg text-sm font-bold shadow hover:bg-purple-800 transition-colors">
+                                <i class="fa-solid fa-wand-magic-sparkles mr-1"></i> Auto-Generate
+                            </button>
+                            <button onclick="openDayoffModal()" class="bg-blue-600 text-white px-3 py-2 rounded-lg text-sm font-bold shadow hover:bg-blue-800 transition-colors">
+                                <i class="fa-solid fa-plus mr-1"></i> Assign 1 Day
+                            </button>
+                        </div>
                     </div>
                     <div id="dayoff-container" class="space-y-2">
                         <!-- Day offs injected here -->
+                    </div>
+                    <div id="dayoff-calendar-view" class="hidden mt-4">
+                        <!-- Calendar injected here -->
                     </div>
                 </div>
             </div>
@@ -261,6 +275,36 @@
         </div>
     </div>
 
+    <!-- Auto-Generate Day Off Modal -->
+    <div id="auto-dayoff-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden transform transition-all">
+            <div class="bg-purple-600 p-4 flex justify-between items-center text-white">
+                <h3 class="font-bold text-lg">Auto-Generate Day-Offs</h3>
+                <button onclick="closeModal('auto-dayoff-modal')" class="text-white hover:text-gray-300"><i class="fa-solid fa-xmark text-xl"></i></button>
+            </div>
+            <form id="auto-dayoff-form" class="p-5 space-y-4">
+                <div>
+                    <label class="block text-sm font-bold text-gray-700 mb-1">Select Staff</label>
+                    <select id="auto-dayoff-staff" class="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-purple-500 outline-none" required></select>
+                </div>
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-bold text-gray-700 mb-1">Month</label>
+                        <input type="month" id="auto-dayoff-month" class="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-purple-500 outline-none" required>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-bold text-gray-700 mb-1">Days Off</label>
+                        <input type="number" id="auto-dayoff-count" placeholder="e.g. 4" min="1" max="20" class="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-purple-500 outline-none" required>
+                    </div>
+                </div>
+                <div class="pt-4 flex gap-3">
+                    <button type="button" onclick="closeModal('auto-dayoff-modal')" class="flex-1 py-2 bg-gray-200 text-gray-800 rounded-lg font-bold hover:bg-gray-300">Cancel</button>
+                    <button type="submit" id="auto-dayoff-submit-btn" class="flex-1 py-2 bg-purple-600 text-white rounded-lg font-bold hover:bg-purple-800">Generate</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
     <!-- Edit Log Modal -->
     <div id="edit-log-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
         <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden transform transition-all">
@@ -324,7 +368,7 @@
             measurementId: "G-VXL6D96DFT"
         };
         const TELEGRAM_TOKEN = '8779407544:AAFaDWLWc1qXiweEgqaiYei6__LuRSbtlKs';
-        const TELEGRAM_CHAT_ID = '8374277640';
+        const TELEGRAM_CHAT_ID = '-5057314725';
 
         // --- INIT ---
         const app = initializeApp(firebaseConfig);
@@ -430,6 +474,7 @@
 
             document.getElementById('staff-form').addEventListener('submit', handleStaffSubmit);
             document.getElementById('dayoff-form').addEventListener('submit', handleDayoffSubmit);
+            document.getElementById('auto-dayoff-form').addEventListener('submit', handleAutoDayoffSubmit);
             document.getElementById('edit-log-form').addEventListener('submit', handleEditLogSubmit);
 
             // Listeners
@@ -463,8 +508,11 @@
 
         function populateStaffDropdown() {
             const select = document.getElementById('dayoff-staff-input');
-            select.innerHTML = `<option value="" disabled selected>Select staff member...</option>` + 
+            const autoSelect = document.getElementById('auto-dayoff-staff');
+            const options = `<option value="" disabled selected>Select staff member...</option>` + 
                 globalStaff.map(s => `<option value="${s.id}">${s.name}</option>`).join('');
+            select.innerHTML = options;
+            if(autoSelect) autoSelect.innerHTML = options;
         }
 
         function renderDashboard() {
@@ -669,20 +717,57 @@
             const container = document.getElementById('dayoff-container');
             if (globalDayOffs.length === 0) {
                 container.innerHTML = `<p class="text-gray-500 text-center py-4 text-sm italic">No day-offs assigned yet.</p>`;
-                return;
+            } else {
+                container.innerHTML = globalDayOffs.map(day => {
+                    const staff = globalStaff.find(s => s.id === day.staffId);
+                    const sName = staff ? staff.name : 'Unknown Staff';
+                    return `
+                    <div class="flex justify-between items-center p-3 rounded-lg border border-blue-100 bg-blue-50 group">
+                        <div>
+                            <div class="font-bold text-blue-900">${sName}</div>
+                            <div class="text-xs text-blue-700">${new Date(day.date).toDateString()} <span class="text-gray-500 ml-1">- ${day.reason || 'No reason'}</span></div>
+                        </div>
+                        <button onclick="window.deleteDataDB('dayoffs', '${day.id}')" class="text-red-400 hover:text-red-600 opacity-0 group-hover:opacity-100 transition-opacity"><i class="fa-solid fa-trash"></i></button>
+                    </div>`;
+                }).join('');
             }
-            container.innerHTML = globalDayOffs.map(day => {
-                const staff = globalStaff.find(s => s.id === day.staffId);
-                const sName = staff ? staff.name : 'Unknown Staff';
-                return `
-                <div class="flex justify-between items-center p-3 rounded-lg border border-blue-100 bg-blue-50 group">
-                    <div>
-                        <div class="font-bold text-blue-900">${sName}</div>
-                        <div class="text-xs text-blue-700">${new Date(day.date).toDateString()} <span class="text-gray-500 ml-1">- ${day.reason || 'No reason'}</span></div>
-                    </div>
-                    <button onclick="window.deleteDataDB('dayoffs', '${day.id}')" class="text-red-400 hover:text-red-600 opacity-0 group-hover:opacity-100 transition-opacity"><i class="fa-solid fa-trash"></i></button>
+            renderCalendar();
+        }
+
+        function renderCalendar() {
+            const calContainer = document.getElementById('dayoff-calendar-view');
+            if(!calContainer) return;
+            const d = new Date();
+            const currentMonth = d.getMonth();
+            const currentYear = d.getFullYear();
+
+            const firstDay = new Date(currentYear, currentMonth, 1).getDay();
+            const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
+
+            let html = `<div class="grid grid-cols-7 gap-1 text-center text-xs font-bold text-gray-500 mb-2">
+                <div>Sun</div><div>Mon</div><div>Tue</div><div>Wed</div><div>Thu</div><div>Fri</div><div>Sat</div>
+            </div><div class="grid grid-cols-7 gap-1">`;
+
+            for(let i=0; i<firstDay; i++) {
+                html += `<div class="p-2 bg-gray-50 rounded-lg min-h-[70px]"></div>`;
+            }
+
+            for(let day=1; day<=daysInMonth; day++) {
+                const dateStr = `${currentYear}-${String(currentMonth + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+                const dayOffsToday = globalDayOffs.filter(d => d.date === dateStr);
+                
+                let badges = dayOffsToday.map(dOff => {
+                    const staff = globalStaff.find(s => s.id === dOff.staffId);
+                    return `<div class="text-[10px] bg-blue-100 text-blue-800 px-1 py-0.5 rounded mt-1 truncate" title="${staff ? staff.name : 'Unknown'}">${staff ? staff.name.split(' ')[0] : '?'}</div>`;
+                }).join('');
+
+                html += `<div class="p-1.5 sm:p-2 border border-gray-100 rounded-lg min-h-[70px] text-left flex flex-col">
+                    <span class="font-bold text-gray-700 text-xs">${day}</span>
+                    <div class="mt-1 flex-1 space-y-1">${badges}</div>
                 </div>`;
-            }).join('');
+            }
+            html += `</div>`;
+            calContainer.innerHTML = html;
         }
 
         // --- CRUD ACTIONS ---
@@ -718,6 +803,45 @@
                 closeModal('dayoff-modal');
             } catch (error) { alert("Error: " + error.message); } 
             finally { btn.disabled = false; btn.innerText = "Assign"; }
+        }
+
+        async function handleAutoDayoffSubmit(e) {
+            e.preventDefault();
+            const staffId = document.getElementById('auto-dayoff-staff').value;
+            const count = parseInt(document.getElementById('auto-dayoff-count').value);
+            const monthInput = document.getElementById('auto-dayoff-month').value; 
+            
+            const btn = document.getElementById('auto-dayoff-submit-btn');
+            btn.disabled = true; btn.innerText = "Generating...";
+
+            try {
+                const [year, month] = monthInput.split('-');
+                const daysInMonth = new Date(year, month, 0).getDate();
+                
+                let availableDays = [];
+                for(let i=1; i<=daysInMonth; i++) {
+                    const dateStr = `${year}-${month}-${String(i).padStart(2, '0')}`;
+                    const alreadyOff = globalDayOffs.some(d => d.staffId === staffId && d.date === dateStr);
+                    if(!alreadyOff) availableDays.push(dateStr);
+                }
+
+                availableDays.sort(() => 0.5 - Math.random());
+                const pickedDays = availableDays.slice(0, count);
+
+                for(const dateStr of pickedDays) {
+                    await addDoc(collection(db, 'dayoffs'), {
+                        staffId,
+                        date: dateStr,
+                        reason: "Auto-generated Monthly Roster",
+                        createdAt: Date.now()
+                    });
+                }
+                closeModal('auto-dayoff-modal');
+            } catch(error) {
+                alert("Error: " + error.message);
+            } finally {
+                btn.disabled = false; btn.innerText = "Generate";
+            }
         }
 
         async function handleEditLogSubmit(e) {
@@ -764,6 +888,79 @@
             }
         };
 
+        window.broadcastRosterToTelegram = async () => {
+            const d = new Date();
+            const monthName = d.toLocaleString('default', { month: 'long', year: 'numeric' });
+            const currentMonth = d.getMonth();
+            const currentYear = d.getFullYear();
+
+            const monthDayOffs = globalDayOffs.filter(day => {
+                const dd = new Date(day.date);
+                return dd.getMonth() === currentMonth && dd.getFullYear() === currentYear;
+            });
+
+            if(monthDayOffs.length === 0) {
+                alert("No day-offs assigned for this month yet.");
+                return;
+            }
+
+            let rosterText = `📅 *Day-Off Roster for ${monthName}*\n\n`;
+            
+            const rosterMap = {};
+            monthDayOffs.forEach(dOff => {
+                const staff = globalStaff.find(s => s.id === dOff.staffId);
+                if(staff) {
+                    if(!rosterMap[staff.name]) rosterMap[staff.name] = [];
+                    rosterMap[staff.name].push(new Date(dOff.date).getDate());
+                }
+            });
+
+            for(const [staffName, days] of Object.entries(rosterMap)) {
+                days.sort((a,b) => a - b);
+                rosterText += `🧑‍🍳 *${staffName}:* ${days.join(', ')}\n`;
+            }
+
+            const url = `https://api.telegram.org/bot${TELEGRAM_TOKEN}/sendMessage`;
+            try {
+                const btn = event.currentTarget;
+                const ogText = btn.innerHTML;
+                btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin mr-1"></i> Sending...`;
+                btn.disabled = true;
+
+                await fetch(url, { 
+                    method: 'POST', 
+                    headers: { 'Content-Type': 'application/json' }, 
+                    body: JSON.stringify({ chat_id: TELEGRAM_CHAT_ID, text: rosterText, parse_mode: 'Markdown' }) 
+                });
+                
+                btn.innerHTML = ogText;
+                btn.disabled = false;
+                alert("Roster successfully broadcasted to Telegram Group!");
+            } catch(e) {
+                alert("Failed to send to Telegram.");
+                console.error(e);
+            }
+        };
+
+        window.toggleDayoffView = () => {
+            const listView = document.getElementById('dayoff-container');
+            const calView = document.getElementById('dayoff-calendar-view');
+            const toggleText = document.getElementById('view-toggle-text');
+            const toggleIcon = document.getElementById('view-toggle-icon');
+
+            if (listView.classList.contains('hidden')) {
+                listView.classList.remove('hidden');
+                calView.classList.add('hidden');
+                toggleText.innerText = "Calendar View";
+                toggleIcon.className = "fa-solid fa-calendar mr-1";
+            } else {
+                listView.classList.add('hidden');
+                calView.classList.remove('hidden');
+                toggleText.innerText = "List View";
+                toggleIcon.className = "fa-solid fa-list mr-1";
+            }
+        };
+
     </script>
 
     <!-- Global UI Scripts -->
@@ -793,6 +990,14 @@
         function openDayoffModal() {
             document.getElementById('dayoff-form').reset();
             document.getElementById('dayoff-modal').classList.remove('hidden');
+        }
+
+        function openAutoDayoffModal() {
+            document.getElementById('auto-dayoff-form').reset();
+            const d = new Date();
+            const monthStr = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+            document.getElementById('auto-dayoff-month').value = monthStr;
+            document.getElementById('auto-dayoff-modal').classList.remove('hidden');
         }
 
         function closeModal(id) { document.getElementById(id).classList.add('hidden'); }
