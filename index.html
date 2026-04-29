@@ -410,6 +410,7 @@
                 const now = Date.now();
                 let statusDetail = "On Time";
                 let isLate = false;
+                let diffMins = 0;
 
                 if (actionCode === 'in' && staffData.shiftStart) {
                     const [hours, minutes] = staffData.shiftStart.split(':').map(Number);
@@ -418,7 +419,7 @@
                     
                     if (now > shiftTime.getTime() + (10 * 60000)) {
                         isLate = true;
-                        const diffMins = Math.floor((now - shiftTime.getTime()) / 60000);
+                        diffMins = Math.floor((now - shiftTime.getTime()) / 60000);
                         statusDetail = `Late (${diffMins}m)`;
                     }
                 }
@@ -431,7 +432,7 @@
                     timestamp: now
                 });
 
-                sendTelegramAlert(staffData.name, actionText, isLate, statusDetail);
+                sendTelegramAlert(staffData.name, actionText, isLate, statusDetail, diffMins);
 
                 const baseColor = actionCode === 'in' ? (isLate ? 'text-red-600' : 'text-green-600') : 'text-orange-600';
                 const icon = actionCode === 'in' ? 'fa-right-to-bracket' : 'fa-person-walking-arrow-right';
@@ -453,11 +454,15 @@
             }
         }
 
-        async function sendTelegramAlert(staffName, action, isLate, statusDetail) {
+        async function sendTelegramAlert(staffName, action, isLate, statusDetail, diffMins = 0) {
             const timeStr = new Date().toLocaleTimeString('en-US');
             let text = '';
             if (isLate) {
-                text = `⚠️ *LATE ALERT* ⚠️\n\n🧑‍🍳 *Staff:* ${staffName}\n🔴 *Status:* Check-In (${statusDetail})\n⏰ *Time:* ${timeStr}`;
+                if (diffMins > 20) {
+                    text = `⚠️ *URGENT LATE ALERT* ⚠️\n\n🧑‍🍳 *Staff:* ${staffName}\n🔴 *Status:* Check-In (${statusDetail})\n⏰ *Time:* ${timeStr}\n\n🚨 *Please come to shop, your late ${diffMins}min!*`;
+                } else {
+                    text = `⚠️ *LATE ALERT* ⚠️\n\n🧑‍🍳 *Staff:* ${staffName}\n🔴 *Status:* Check-In (${statusDetail})\n⏰ *Time:* ${timeStr}`;
+                }
             } else {
                 const emoji = action === 'Check-In' ? '🟢' : '🟠';
                 text = `☕ *Attendance*\n\n🧑‍🍳 *Staff:* ${staffName}\n${emoji} *Status:* ${action}\n⏰ *Time:* ${timeStr}`;
@@ -727,7 +732,10 @@
                             <div class="font-bold text-blue-900">${sName}</div>
                             <div class="text-xs text-blue-700">${new Date(day.date).toDateString()} <span class="text-gray-500 ml-1">- ${day.reason || 'No reason'}</span></div>
                         </div>
-                        <button onclick="window.deleteDataDB('dayoffs', '${day.id}')" class="text-red-400 hover:text-red-600 opacity-0 group-hover:opacity-100 transition-opacity"><i class="fa-solid fa-trash"></i></button>
+                        <div class="flex gap-3 opacity-0 group-hover:opacity-100 transition-opacity items-center">
+                            <button onclick="window.sendSingleDayoffToTelegram('${sName}', '${day.date}', true)" class="text-blue-500 hover:text-blue-700" title="Send Alert to Telegram"><i class="fa-solid fa-paper-plane"></i></button>
+                            <button onclick="window.deleteDataDB('dayoffs', '${day.id}')" class="text-red-400 hover:text-red-600" title="Delete"><i class="fa-solid fa-trash"></i></button>
+                        </div>
                     </div>`;
                 }).join('');
             }
@@ -790,6 +798,31 @@
             finally { btn.disabled = false; btn.innerText = "Save Staff"; }
         }
 
+        window.sendSingleDayoffToTelegram = async (staffName, date, showSuccessAlert = false) => {
+            const dateStr = new Date(date).toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+            const text = `🏖️ *Day-Off Notice*\n\n🧑‍🍳 *Name:* ${staffName}\n🔵 *Status:* Day-Off\n📅 *Day:* ${dateStr}`;
+            const url = `https://api.telegram.org/bot${TELEGRAM_TOKEN}/sendMessage`;
+            
+            try {
+                const response = await fetch(url, { 
+                    method: 'POST', 
+                    headers: { 'Content-Type': 'application/json' }, 
+                    body: JSON.stringify({ chat_id: TELEGRAM_CHAT_ID, text: text, parse_mode: 'Markdown' }) 
+                });
+                
+                if (!response.ok) {
+                    const err = await response.json();
+                    if(showSuccessAlert) alert("Telegram Error: " + err.description);
+                    console.error("Telegram Error: ", err);
+                } else {
+                    if(showSuccessAlert) alert("Successfully sent day-off notice to Telegram!");
+                }
+            } catch(e) {
+                if(showSuccessAlert) alert("Failed to connect to Telegram.");
+                console.error(e);
+            }
+        };
+
         async function handleDayoffSubmit(e) {
             e.preventDefault();
             const staffId = document.getElementById('dayoff-staff-input').value;
@@ -800,6 +833,11 @@
             btn.disabled = true; btn.innerText = "Assigning...";
             try {
                 await addDoc(collection(db, 'dayoffs'), { staffId, date, reason, createdAt: Date.now() });
+                
+                // Auto alert to telegram for this dayoff
+                const staff = globalStaff.find(s => s.id === staffId);
+                if(staff) window.sendSingleDayoffToTelegram(staff.name, date, false);
+                
                 closeModal('dayoff-modal');
             } catch (error) { alert("Error: " + error.message); } 
             finally { btn.disabled = false; btn.innerText = "Assign"; }
@@ -828,6 +866,7 @@
                 availableDays.sort(() => 0.5 - Math.random());
                 const pickedDays = availableDays.slice(0, count);
 
+                const staff = globalStaff.find(s => s.id === staffId);
                 for(const dateStr of pickedDays) {
                     await addDoc(collection(db, 'dayoffs'), {
                         staffId,
@@ -835,6 +874,9 @@
                         reason: "Auto-generated Monthly Roster",
                         createdAt: Date.now()
                     });
+                    
+                    // Auto alert to telegram
+                    if(staff) window.sendSingleDayoffToTelegram(staff.name, dateStr, false);
                 }
                 closeModal('auto-dayoff-modal');
             } catch(error) {
@@ -920,24 +962,38 @@
                 rosterText += `🧑‍🍳 *${staffName}:* ${days.join(', ')}\n`;
             }
 
-            const url = `https://api.telegram.org/bot${TELEGRAM_TOKEN}/sendMessage`;
-            try {
-                const btn = event.currentTarget;
-                const ogText = btn.innerHTML;
+            const btn = window.event ? window.event.currentTarget : null;
+            let ogText = "";
+            if (btn) {
+                ogText = btn.innerHTML;
                 btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin mr-1"></i> Sending...`;
                 btn.disabled = true;
+            }
 
-                await fetch(url, { 
+            const url = `https://api.telegram.org/bot${TELEGRAM_TOKEN}/sendMessage`;
+            try {
+                const response = await fetch(url, { 
                     method: 'POST', 
                     headers: { 'Content-Type': 'application/json' }, 
                     body: JSON.stringify({ chat_id: TELEGRAM_CHAT_ID, text: rosterText, parse_mode: 'Markdown' }) 
                 });
                 
-                btn.innerHTML = ogText;
-                btn.disabled = false;
+                if (!response.ok) {
+                    const errData = await response.json();
+                    throw new Error(errData.description || "Unknown Telegram API Error");
+                }
+                
+                if (btn) {
+                    btn.innerHTML = ogText;
+                    btn.disabled = false;
+                }
                 alert("Roster successfully broadcasted to Telegram Group!");
             } catch(e) {
-                alert("Failed to send to Telegram.");
+                if (btn) {
+                    btn.innerHTML = ogText || `<i class="fa-solid fa-paper-plane mr-1"></i> Send to Telegram`;
+                    btn.disabled = false;
+                }
+                alert("Failed to send to Telegram. Error: " + e.message);
                 console.error(e);
             }
         };
