@@ -8,6 +8,8 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- FontAwesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     
     <script>
         tailwind.config = {
@@ -38,7 +40,7 @@
         <h2 class="text-xl font-bold text-cafe-800">Loading System...</h2>
     </div>
 
-    <!-- 1. STAFF SCAN ENDPOINT VIEW (For QR Code redirects) -->
+    <!-- 1. STAFF SCAN ENDPOINT VIEW -->
     <div id="scan-view" class="hidden flex-grow flex flex-col items-center justify-center p-6 text-center">
         <div id="scan-status" class="bg-white p-8 rounded-2xl shadow-xl border border-cafe-100 max-w-sm w-full">
             <i class="fa-solid fa-spinner fa-spin text-cafe-500 text-6xl mb-4"></i>
@@ -135,11 +137,21 @@
 
             <!-- SECTION: PAYROLL & ROSTER -->
             <div id="section-payroll" class="hidden space-y-6">
+                
+                <!-- Chart Area -->
+                <div class="bg-white p-5 rounded-xl shadow-sm border border-cafe-100">
+                    <h2 class="font-bold text-cafe-800 text-lg mb-4"><i class="fa-solid fa-chart-column mr-2"></i> Payroll Overview Chart</h2>
+                    <div class="relative h-64 w-full">
+                        <canvas id="payrollChart"></canvas>
+                    </div>
+                </div>
+
+                <!-- Payroll Table -->
                 <div class="bg-white p-5 rounded-xl shadow-sm border border-cafe-100 overflow-hidden">
                     <div class="flex justify-between items-end mb-4 border-b pb-4">
                         <div>
                             <h2 class="font-bold text-cafe-800 text-lg"><i class="fa-solid fa-money-check-dollar mr-2"></i> Monthly Payroll Estimate</h2>
-                            <p class="text-xs text-gray-500 mt-1">Based on current month's attendance records.</p>
+                            <p class="text-xs text-gray-500 mt-1">Based on check-ins and approved day-offs.</p>
                         </div>
                         <div class="text-sm font-bold bg-cafe-100 text-cafe-800 px-3 py-1 rounded-full" id="payroll-month-label">
                             Month
@@ -153,7 +165,7 @@
                                     <th class="p-3">Staff Name</th>
                                     <th class="p-3">Base Salary</th>
                                     <th class="p-3">Days Present</th>
-                                    <th class="p-3">Late Instances</th>
+                                    <th class="p-3">Paid Day-Offs</th>
                                     <th class="p-3 text-right">Est. Earnings</th>
                                 </tr>
                             </thead>
@@ -161,6 +173,22 @@
                                 <!-- Payroll rows injected here -->
                             </tbody>
                         </table>
+                    </div>
+                </div>
+
+                <!-- Day Off Roster -->
+                <div class="bg-white p-5 rounded-xl shadow-sm border border-cafe-100">
+                    <div class="flex justify-between items-center mb-4 border-b pb-4">
+                        <div>
+                            <h2 class="font-bold text-cafe-800 text-lg"><i class="fa-solid fa-calendar-day mr-2"></i> Day-Off Roster</h2>
+                            <p class="text-xs text-gray-500 mt-1">Manage approved leaves and weekly off-days.</p>
+                        </div>
+                        <button onclick="openDayoffModal()" class="bg-blue-600 text-white px-3 py-2 rounded-lg text-sm font-bold shadow hover:bg-blue-800 transition-colors">
+                            <i class="fa-solid fa-plus mr-1"></i> Assign Day-Off
+                        </button>
+                    </div>
+                    <div id="dayoff-container" class="space-y-2">
+                        <!-- Day offs injected here -->
                     </div>
                 </div>
             </div>
@@ -175,16 +203,14 @@
         <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden transform transition-all">
             <div class="bg-cafe-800 p-4 flex justify-between items-center text-white">
                 <h3 id="staff-modal-title" class="font-bold text-lg">Add New Staff</h3>
-                <button onclick="closeStaffModal()" class="text-white hover:text-gray-300"><i class="fa-solid fa-xmark text-xl"></i></button>
+                <button onclick="closeModal('staff-modal')" class="text-white hover:text-gray-300"><i class="fa-solid fa-xmark text-xl"></i></button>
             </div>
             <form id="staff-form" class="p-5 space-y-4">
                 <input type="hidden" id="staff-id-input">
-                
                 <div>
                     <label class="block text-sm font-bold text-gray-700 mb-1">Full Name</label>
                     <input type="text" id="staff-name-input" class="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-cafe-500 outline-none" required>
                 </div>
-                
                 <div class="grid grid-cols-2 gap-4">
                     <div>
                         <label class="block text-sm font-bold text-gray-700 mb-1">Shift Start</label>
@@ -195,15 +221,69 @@
                         <input type="time" id="staff-end-input" class="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-cafe-500 outline-none" required defaultValue="15:00">
                     </div>
                 </div>
-
                 <div>
                     <label class="block text-sm font-bold text-gray-700 mb-1">Base Salary ($ / Month)</label>
                     <input type="number" id="staff-salary-input" placeholder="e.g. 500" class="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-cafe-500 outline-none" required>
                 </div>
-
                 <div class="pt-4 flex gap-3">
-                    <button type="button" onclick="closeStaffModal()" class="flex-1 py-2 bg-gray-200 text-gray-800 rounded-lg font-bold hover:bg-gray-300">Cancel</button>
+                    <button type="button" onclick="closeModal('staff-modal')" class="flex-1 py-2 bg-gray-200 text-gray-800 rounded-lg font-bold hover:bg-gray-300">Cancel</button>
                     <button type="submit" id="staff-submit-btn" class="flex-1 py-2 bg-cafe-600 text-white rounded-lg font-bold hover:bg-cafe-800">Save Staff</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Assign Day Off Modal -->
+    <div id="dayoff-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden transform transition-all">
+            <div class="bg-blue-600 p-4 flex justify-between items-center text-white">
+                <h3 class="font-bold text-lg">Assign Day-Off</h3>
+                <button onclick="closeModal('dayoff-modal')" class="text-white hover:text-gray-300"><i class="fa-solid fa-xmark text-xl"></i></button>
+            </div>
+            <form id="dayoff-form" class="p-5 space-y-4">
+                <div>
+                    <label class="block text-sm font-bold text-gray-700 mb-1">Select Staff</label>
+                    <select id="dayoff-staff-input" class="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none" required></select>
+                </div>
+                <div>
+                    <label class="block text-sm font-bold text-gray-700 mb-1">Date</label>
+                    <input type="date" id="dayoff-date-input" class="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none" required>
+                </div>
+                <div>
+                    <label class="block text-sm font-bold text-gray-700 mb-1">Reason (Optional)</label>
+                    <input type="text" id="dayoff-reason-input" placeholder="e.g. Weekly off, Sick leave" class="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none">
+                </div>
+                <div class="pt-4 flex gap-3">
+                    <button type="button" onclick="closeModal('dayoff-modal')" class="flex-1 py-2 bg-gray-200 text-gray-800 rounded-lg font-bold hover:bg-gray-300">Cancel</button>
+                    <button type="submit" id="dayoff-submit-btn" class="flex-1 py-2 bg-blue-600 text-white rounded-lg font-bold hover:bg-blue-800">Assign</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Edit Log Modal -->
+    <div id="edit-log-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden transform transition-all">
+            <div class="bg-cafe-800 p-4 flex justify-between items-center text-white">
+                <h3 class="font-bold text-lg">Edit Activity Log</h3>
+                <button onclick="closeModal('edit-log-modal')" class="text-white hover:text-gray-300"><i class="fa-solid fa-xmark text-xl"></i></button>
+            </div>
+            <form id="edit-log-form" class="p-5 space-y-4">
+                <input type="hidden" id="edit-log-id">
+                <div>
+                    <label class="block text-sm font-bold text-gray-700 mb-1">Action Type</label>
+                    <select id="edit-log-action" class="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-cafe-500 outline-none">
+                        <option value="Check-In">Check-In</option>
+                        <option value="Check-Out">Check-Out</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-sm font-bold text-gray-700 mb-1">Status Note</label>
+                    <input type="text" id="edit-log-status" class="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-cafe-500 outline-none">
+                </div>
+                <div class="pt-4 flex gap-3">
+                    <button type="button" onclick="closeModal('edit-log-modal')" class="flex-1 py-2 bg-gray-200 text-gray-800 rounded-lg font-bold hover:bg-gray-300">Cancel</button>
+                    <button type="submit" id="edit-log-submit-btn" class="flex-1 py-2 bg-cafe-600 text-white rounded-lg font-bold hover:bg-cafe-800">Update Log</button>
                 </div>
             </form>
         </div>
@@ -212,7 +292,7 @@
     <!-- QR Code Modal -->
     <div id="qr-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
         <div class="bg-white rounded-2xl shadow-2xl p-6 max-w-sm w-full text-center relative">
-            <button onclick="closeQrModal()" class="absolute top-3 right-3 text-gray-400 hover:text-gray-800">
+            <button onclick="closeModal('qr-modal')" class="absolute top-3 right-3 text-gray-400 hover:text-gray-800">
                 <i class="fa-solid fa-xmark text-xl"></i>
             </button>
             <h3 id="qr-title" class="text-xl font-bold text-cafe-800 mb-1">QR Code</h3>
@@ -250,9 +330,11 @@
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
 
-        // Global State Arrays to avoid complex Firebase index queries
+        // Global State Arrays
         let globalStaff = [];
         let globalLogs = [];
+        let globalDayOffs = [];
+        let chartInstance = null;
 
         // Check Mode (Scan vs Admin)
         const urlParams = new URLSearchParams(window.location.search);
@@ -267,7 +349,7 @@
             }
         };
 
-        // --- 1. STAFF SCAN ENDPOINT LOGIC (With LATE Detection) ---
+        // --- 1. STAFF SCAN ENDPOINT LOGIC ---
         async function runScanEndpoint(id, actionCode) {
             document.getElementById('loading-screen').classList.add('hidden');
             document.getElementById('scan-view').classList.remove('hidden');
@@ -285,23 +367,18 @@
                 let statusDetail = "On Time";
                 let isLate = false;
 
-                // Late Detection Logic (Only on Check-in)
                 if (actionCode === 'in' && staffData.shiftStart) {
                     const [hours, minutes] = staffData.shiftStart.split(':').map(Number);
                     const shiftTime = new Date();
                     shiftTime.setHours(hours, minutes, 0, 0);
                     
-                    // Late if current time is > 10 mins (600,000 ms) past shift start
                     if (now > shiftTime.getTime() + (10 * 60000)) {
                         isLate = true;
-                        statusDetail = "Late";
-                        // Calculate how many minutes late
                         const diffMins = Math.floor((now - shiftTime.getTime()) / 60000);
                         statusDetail = `Late (${diffMins}m)`;
                     }
                 }
 
-                // 1. Save Log
                 await addDoc(collection(db, 'logs'), {
                     staffId: id,
                     staffName: staffData.name,
@@ -310,10 +387,8 @@
                     timestamp: now
                 });
 
-                // 2. Telegram Alert
                 sendTelegramAlert(staffData.name, actionText, isLate, statusDetail);
 
-                // 3. UI Response
                 const baseColor = actionCode === 'in' ? (isLate ? 'text-red-600' : 'text-green-600') : 'text-orange-600';
                 const icon = actionCode === 'in' ? 'fa-right-to-bracket' : 'fa-person-walking-arrow-right';
                 
@@ -337,20 +412,14 @@
         async function sendTelegramAlert(staffName, action, isLate, statusDetail) {
             const timeStr = new Date().toLocaleTimeString('en-US');
             let text = '';
-            
             if (isLate) {
                 text = `⚠️ *LATE ALERT* ⚠️\n\n🧑‍🍳 *Staff:* ${staffName}\n🔴 *Status:* Check-In (${statusDetail})\n⏰ *Time:* ${timeStr}`;
             } else {
                 const emoji = action === 'Check-In' ? '🟢' : '🟠';
                 text = `☕ *Attendance*\n\n🧑‍🍳 *Staff:* ${staffName}\n${emoji} *Status:* ${action}\n⏰ *Time:* ${timeStr}`;
             }
-            
             const url = `https://api.telegram.org/bot${TELEGRAM_TOKEN}/sendMessage`;
-            fetch(url, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ chat_id: TELEGRAM_CHAT_ID, text: text, parse_mode: 'Markdown' })
-            }).catch(e => console.error(e));
+            fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ chat_id: TELEGRAM_CHAT_ID, text: text, parse_mode: 'Markdown' }) }).catch(e => console.error(e));
         }
 
 
@@ -360,61 +429,70 @@
             document.getElementById('admin-view').classList.remove('hidden');
 
             document.getElementById('staff-form').addEventListener('submit', handleStaffSubmit);
+            document.getElementById('dayoff-form').addEventListener('submit', handleDayoffSubmit);
+            document.getElementById('edit-log-form').addEventListener('submit', handleEditLogSubmit);
 
             // Listeners
             onSnapshot(collection(db, 'staff'), (snapshot) => {
                 globalStaff = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                populateStaffDropdown();
                 refreshAllViews();
             });
 
             onSnapshot(collection(db, 'logs'), (snapshot) => {
                 globalLogs = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-                globalLogs.sort((a, b) => b.timestamp - a.timestamp); // Sort newest first
+                globalLogs.sort((a, b) => b.timestamp - a.timestamp); 
+                refreshAllViews();
+            });
+
+            onSnapshot(collection(db, 'dayoffs'), (snapshot) => {
+                globalDayOffs = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                globalDayOffs.sort((a, b) => new Date(b.date) - new Date(a.date));
                 refreshAllViews();
             });
         }
 
         // --- DATA RENDERING ---
-        function refreshAllViews() {
+        window.refreshAllViews = function() {
             renderDashboard();
             renderLogs();
             renderStaff();
-            renderPayroll();
+            renderPayrollAndChart();
+            renderDayoffs();
+        }
+
+        function populateStaffDropdown() {
+            const select = document.getElementById('dayoff-staff-input');
+            select.innerHTML = `<option value="" disabled selected>Select staff member...</option>` + 
+                globalStaff.map(s => `<option value="${s.id}">${s.name}</option>`).join('');
         }
 
         function renderDashboard() {
             const todayStart = new Date();
             todayStart.setHours(0, 0, 0, 0);
-            
             const todayLogs = globalLogs.filter(log => log.timestamp >= todayStart.getTime());
             
-            // Present = Unique staff IDs who checked IN today
             const presentStaffIds = new Set(todayLogs.filter(l => l.action === 'Check-In').map(l => l.staffId));
-            
-            // Late = Count of Check-ins today that have status starting with 'Late'
             const lateCount = todayLogs.filter(l => l.action === 'Check-In' && l.status && l.status.startsWith('Late')).length;
-            
-            const totalStaff = globalStaff.length;
-            const absentCount = Math.max(0, totalStaff - presentStaffIds.size);
+            const absentCount = Math.max(0, globalStaff.length - presentStaffIds.size);
 
-            document.getElementById('stat-total-staff').innerText = totalStaff;
+            document.getElementById('stat-total-staff').innerText = globalStaff.length;
             document.getElementById('stat-present').innerText = presentStaffIds.size;
             document.getElementById('stat-late').innerText = lateCount;
             document.getElementById('stat-absent').innerText = absentCount;
 
-            // Render Recent Feed (Top 5)
             const feedContainer = document.getElementById('dashboard-feed');
             if (globalLogs.length === 0) {
                 feedContainer.innerHTML = `<div class="text-sm text-gray-500 text-center py-2">No activity yet.</div>`;
             } else {
-                feedContainer.innerHTML = globalLogs.slice(0, 5).map(log => {
+                feedContainer.innerHTML = globalLogs.slice(0, 8).map(log => {
                     const isLate = log.status && log.status.startsWith('Late');
                     const isCheckIn = log.action === 'Check-In';
                     const icon = isCheckIn ? 'fa-right-to-bracket text-green-500' : 'fa-person-walking-arrow-right text-orange-500';
                     const bgBadge = isLate ? 'bg-red-100 text-red-700 border-red-200' : 'bg-gray-100 text-gray-600 border-gray-200';
                     
                     return `
-                    <div class="flex items-center justify-between">
+                    <div class="flex items-center justify-between group">
                         <div class="flex items-center gap-3">
                             <i class="fa-solid ${icon}"></i>
                             <div>
@@ -422,8 +500,12 @@
                                 <p class="text-xs text-gray-500">${new Date(log.timestamp).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</p>
                             </div>
                         </div>
-                        <div class="text-[10px] font-bold uppercase tracking-wider px-2 py-1 border rounded ${bgBadge}">
-                            ${isLate ? log.status : log.action}
+                        <div class="flex items-center gap-2">
+                            <div class="text-[10px] font-bold uppercase tracking-wider px-2 py-1 border rounded ${bgBadge}">${isLate ? log.status : log.action}</div>
+                            <div class="opacity-0 group-hover:opacity-100 transition-opacity flex gap-1">
+                                <button onclick="window.openEditLogModal('${log.id}')" class="text-gray-400 hover:text-blue-600"><i class="fa-solid fa-pen text-xs"></i></button>
+                                <button onclick="window.deleteDataDB('logs', '${log.id}')" class="text-gray-400 hover:text-red-600"><i class="fa-solid fa-trash text-xs"></i></button>
+                            </div>
                         </div>
                     </div>`;
                 }).join('<hr class="border-gray-100 border-dashed">');
@@ -444,14 +526,20 @@
                 const textCol = isLate ? 'text-red-700' : (isCheckIn ? 'text-green-700' : 'text-orange-700');
                 
                 return `
-                <div class="flex justify-between items-center p-3 rounded-lg border ${borderColor}">
+                <div class="flex justify-between items-center p-3 rounded-lg border ${borderColor} group">
                     <div>
                         <div class="font-bold text-cafe-900">${log.staffName}</div>
                         <div class="text-xs font-bold uppercase ${textCol}">${isLate ? `<i class="fa-solid fa-warning mr-1"></i> ${log.status}` : log.action}</div>
                     </div>
-                    <div class="text-right">
-                        <div class="text-sm font-bold text-cafe-800">${new Date(log.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</div>
-                        <div class="text-xs text-gray-500">${new Date(log.timestamp).toLocaleDateString()}</div>
+                    <div class="flex items-center gap-4">
+                        <div class="text-right">
+                            <div class="text-sm font-bold text-cafe-800">${new Date(log.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</div>
+                            <div class="text-xs text-gray-500">${new Date(log.timestamp).toLocaleDateString()}</div>
+                        </div>
+                        <div class="opacity-0 group-hover:opacity-100 transition-opacity flex flex-col gap-1">
+                            <button onclick="window.openEditLogModal('${log.id}')" class="text-blue-500 hover:text-blue-700"><i class="fa-solid fa-pen"></i></button>
+                            <button onclick="window.deleteDataDB('logs', '${log.id}')" class="text-red-500 hover:text-red-700"><i class="fa-solid fa-trash"></i></button>
+                        </div>
                     </div>
                 </div>`;
             }).join('');
@@ -463,7 +551,6 @@
                 container.innerHTML = `<div class="col-span-2 text-center text-gray-500 py-8">No staff added yet. Click 'Add Staff' to begin.</div>`;
                 return;
             }
-
             container.innerHTML = globalStaff.map(staff => `
                 <div class="bg-white p-4 rounded-xl shadow-sm border border-cafe-100 flex flex-col justify-between">
                     <div class="flex justify-between items-start mb-3 border-b pb-3">
@@ -474,22 +561,18 @@
                         </div>
                         <div class="flex gap-2">
                             <button onclick="window.editStaffUI('${staff.id}')" class="text-blue-500 hover:text-blue-700 bg-blue-50 w-8 h-8 rounded-full flex items-center justify-center transition-colors"><i class="fa-solid fa-pen text-sm"></i></button>
-                            <button onclick="window.deleteStaffDB('${staff.id}')" class="text-red-500 hover:text-red-700 bg-red-50 w-8 h-8 rounded-full flex items-center justify-center transition-colors"><i class="fa-solid fa-trash text-sm"></i></button>
+                            <button onclick="window.deleteDataDB('staff', '${staff.id}')" class="text-red-500 hover:text-red-700 bg-red-50 w-8 h-8 rounded-full flex items-center justify-center transition-colors"><i class="fa-solid fa-trash text-sm"></i></button>
                         </div>
                     </div>
                     <div class="flex gap-2 w-full mt-auto">
-                        <button onclick="window.openQrModal('${staff.id}', '${staff.name}', 'in')" class="flex-1 py-2 bg-green-50 text-green-700 border border-green-200 hover:bg-green-100 rounded-lg text-xs font-bold transition-colors">
-                            <i class="fa-solid fa-qrcode mr-1"></i> QR IN
-                        </button>
-                        <button onclick="window.openQrModal('${staff.id}', '${staff.name}', 'out')" class="flex-1 py-2 bg-orange-50 text-orange-700 border border-orange-200 hover:bg-orange-100 rounded-lg text-xs font-bold transition-colors">
-                            <i class="fa-solid fa-qrcode mr-1"></i> QR OUT
-                        </button>
+                        <button onclick="window.openQrModal('${staff.id}', '${staff.name}', 'in')" class="flex-1 py-2 bg-green-50 text-green-700 border border-green-200 hover:bg-green-100 rounded-lg text-xs font-bold transition-colors"><i class="fa-solid fa-qrcode mr-1"></i> QR IN</button>
+                        <button onclick="window.openQrModal('${staff.id}', '${staff.name}', 'out')" class="flex-1 py-2 bg-orange-50 text-orange-700 border border-orange-200 hover:bg-orange-100 rounded-lg text-xs font-bold transition-colors"><i class="fa-solid fa-qrcode mr-1"></i> QR OUT</button>
                     </div>
                 </div>
             `).join('');
         }
 
-        function renderPayroll() {
+        window.renderPayrollAndChart = function() {
             const tbody = document.getElementById('payroll-table-body');
             const d = new Date();
             document.getElementById('payroll-month-label').innerText = d.toLocaleString('default', { month: 'long', year: 'numeric' });
@@ -497,41 +580,108 @@
             const currentMonth = d.getMonth();
             const currentYear = d.getFullYear();
 
-            // Filter logs for this month
             const monthLogs = globalLogs.filter(log => {
                 const ld = new Date(log.timestamp);
                 return ld.getMonth() === currentMonth && ld.getFullYear() === currentYear;
             });
+            
+            const monthDayOffs = globalDayOffs.filter(day => {
+                const dd = new Date(day.date);
+                return dd.getMonth() === currentMonth && dd.getFullYear() === currentYear;
+            });
 
             if (globalStaff.length === 0) {
                 tbody.innerHTML = `<tr><td colspan="5" class="p-4 text-center text-gray-500">No staff found.</td></tr>`;
+                if(chartInstance) chartInstance.destroy();
                 return;
             }
 
+            let chartLabels = [];
+            let chartEarnings = [];
+            let chartDays = [];
+
             tbody.innerHTML = globalStaff.map(staff => {
                 const staffLogs = monthLogs.filter(l => l.staffId === staff.id);
+                const staffDayOffs = monthDayOffs.filter(d => d.staffId === staff.id).length;
                 
-                // Count unique days present (based on check-in)
                 const checkIns = staffLogs.filter(l => l.action === 'Check-In');
                 const presentDates = new Set(checkIns.map(l => new Date(l.timestamp).toDateString()));
                 const daysPresent = presentDates.size;
 
-                // Count Late instances
-                const lateInstances = checkIns.filter(l => l.status && l.status.startsWith('Late')).length;
-
-                // Estimate Pay (Base Salary / 30 * days present)
                 const baseSal = parseFloat(staff.salary) || 0;
                 const dailyRate = baseSal / 30;
-                const estEarnings = (dailyRate * daysPresent).toFixed(2);
+                const totalPaidDays = daysPresent + staffDayOffs;
+                const estEarnings = (dailyRate * totalPaidDays).toFixed(2);
+
+                // Chart Data Collection
+                chartLabels.push(staff.name);
+                chartEarnings.push(estEarnings);
+                chartDays.push(totalPaidDays);
 
                 return `
                 <tr class="hover:bg-gray-50 transition-colors">
                     <td class="p-3 font-bold text-cafe-900">${staff.name}</td>
                     <td class="p-3 text-gray-600">$${baseSal}</td>
-                    <td class="p-3"><span class="bg-green-100 text-green-800 px-2 py-1 rounded text-xs font-bold">${daysPresent} Days</span></td>
-                    <td class="p-3">${lateInstances > 0 ? `<span class="text-red-600 font-bold"><i class="fa-solid fa-warning text-xs"></i> ${lateInstances}</span>` : '<span class="text-gray-400">-</span>'}</td>
+                    <td class="p-3"><span class="bg-green-100 text-green-800 px-2 py-1 rounded text-xs font-bold">${daysPresent}</span></td>
+                    <td class="p-3"><span class="bg-blue-100 text-blue-800 px-2 py-1 rounded text-xs font-bold">${staffDayOffs}</span></td>
                     <td class="p-3 text-right font-black text-cafe-800">$${estEarnings}</td>
                 </tr>`;
+            }).join('');
+
+            // Draw Chart
+            const ctx = document.getElementById('payrollChart').getContext('2d');
+            if(chartInstance) chartInstance.destroy();
+            
+            chartInstance = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: chartLabels,
+                    datasets: [
+                        {
+                            label: 'Estimated Earnings ($)',
+                            data: chartEarnings,
+                            backgroundColor: '#8c6b5d',
+                            borderRadius: 4,
+                            yAxisID: 'y'
+                        },
+                        {
+                            label: 'Total Paid Days',
+                            data: chartDays,
+                            backgroundColor: '#4ade80',
+                            borderRadius: 4,
+                            yAxisID: 'y1'
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    interaction: { mode: 'index', intersect: false },
+                    scales: {
+                        y: { type: 'linear', display: true, position: 'left', title: {display: true, text: 'Earnings ($)'} },
+                        y1: { type: 'linear', display: true, position: 'right', grid: {drawOnChartArea: false}, title: {display: true, text: 'Days'} }
+                    }
+                }
+            });
+        }
+
+        function renderDayoffs() {
+            const container = document.getElementById('dayoff-container');
+            if (globalDayOffs.length === 0) {
+                container.innerHTML = `<p class="text-gray-500 text-center py-4 text-sm italic">No day-offs assigned yet.</p>`;
+                return;
+            }
+            container.innerHTML = globalDayOffs.map(day => {
+                const staff = globalStaff.find(s => s.id === day.staffId);
+                const sName = staff ? staff.name : 'Unknown Staff';
+                return `
+                <div class="flex justify-between items-center p-3 rounded-lg border border-blue-100 bg-blue-50 group">
+                    <div>
+                        <div class="font-bold text-blue-900">${sName}</div>
+                        <div class="text-xs text-blue-700">${new Date(day.date).toDateString()} <span class="text-gray-500 ml-1">- ${day.reason || 'No reason'}</span></div>
+                    </div>
+                    <button onclick="window.deleteDataDB('dayoffs', '${day.id}')" class="text-red-400 hover:text-red-600 opacity-0 group-hover:opacity-100 transition-opacity"><i class="fa-solid fa-trash"></i></button>
+                </div>`;
             }).join('');
         }
 
@@ -546,27 +696,48 @@
 
             const btn = document.getElementById('staff-submit-btn');
             btn.disabled = true; btn.innerText = "Saving...";
-
             try {
                 const payload = { name, shiftStart: start, shiftEnd: end, salary: Number(salary) };
-                if (id) {
-                    await updateDoc(doc(db, 'staff', id), payload);
-                } else {
-                    await addDoc(collection(db, 'staff'), { ...payload, createdAt: Date.now() });
-                }
-                closeStaffModal();
-            } catch (error) {
-                alert("Error saving staff: " + error.message);
-            } finally {
-                btn.disabled = false; btn.innerText = "Save Staff";
-            }
+                if (id) await updateDoc(doc(db, 'staff', id), payload);
+                else await addDoc(collection(db, 'staff'), { ...payload, createdAt: Date.now() });
+                closeModal('staff-modal');
+            } catch (error) { alert("Error: " + error.message); } 
+            finally { btn.disabled = false; btn.innerText = "Save Staff"; }
         }
 
-        window.deleteStaffDB = async (id) => {
-            if (confirm("Are you sure you want to delete this staff member? This cannot be undone.")) {
-                try {
-                    await deleteDoc(doc(db, 'staff', id));
-                } catch(e) { alert("Failed to delete."); }
+        async function handleDayoffSubmit(e) {
+            e.preventDefault();
+            const staffId = document.getElementById('dayoff-staff-input').value;
+            const date = document.getElementById('dayoff-date-input').value;
+            const reason = document.getElementById('dayoff-reason-input').value.trim();
+            
+            const btn = document.getElementById('dayoff-submit-btn');
+            btn.disabled = true; btn.innerText = "Assigning...";
+            try {
+                await addDoc(collection(db, 'dayoffs'), { staffId, date, reason, createdAt: Date.now() });
+                closeModal('dayoff-modal');
+            } catch (error) { alert("Error: " + error.message); } 
+            finally { btn.disabled = false; btn.innerText = "Assign"; }
+        }
+
+        async function handleEditLogSubmit(e) {
+            e.preventDefault();
+            const id = document.getElementById('edit-log-id').value;
+            const action = document.getElementById('edit-log-action').value;
+            const status = document.getElementById('edit-log-status').value;
+            
+            const btn = document.getElementById('edit-log-submit-btn');
+            btn.disabled = true; btn.innerText = "Updating...";
+            try {
+                await updateDoc(doc(db, 'logs', id), { action, status });
+                closeModal('edit-log-modal');
+            } catch (error) { alert("Error: " + error.message); } 
+            finally { btn.disabled = false; btn.innerText = "Update Log"; }
+        }
+
+        window.deleteDataDB = async (collectionName, id) => {
+            if (confirm(`Are you sure you want to delete this record?`)) {
+                try { await deleteDoc(doc(db, collectionName, id)); } catch(e) { alert("Failed to delete."); }
             }
         };
 
@@ -583,11 +754,20 @@
             }
         };
 
+        window.openEditLogModal = (id) => {
+            const log = globalLogs.find(l => l.id === id);
+            if(log) {
+                document.getElementById('edit-log-id').value = log.id;
+                document.getElementById('edit-log-action').value = log.action;
+                document.getElementById('edit-log-status').value = log.status || "On Time";
+                document.getElementById('edit-log-modal').classList.remove('hidden');
+            }
+        };
+
     </script>
 
-    <!-- Global UI Scripts (Tabs & Modals) -->
+    <!-- Global UI Scripts -->
     <script>
-        // Tab Management
         const tabs = ['dashboard', 'logs', 'staff', 'payroll'];
         function switchTab(activeId) {
             tabs.forEach(tab => {
@@ -596,9 +776,13 @@
             });
             document.getElementById(`section-${activeId}`).classList.remove('hidden');
             document.getElementById(`tab-${activeId}`).classList.replace('tab-inactive', 'tab-active');
+
+            // Force chart to render correctly when its tab becomes visible
+            if(activeId === 'payroll' && window.renderPayrollAndChart) {
+                setTimeout(window.renderPayrollAndChart, 50);
+            }
         }
 
-        // Modal Management
         function openStaffModal() {
             document.getElementById('staff-form').reset();
             document.getElementById('staff-id-input').value = '';
@@ -606,25 +790,21 @@
             document.getElementById('staff-modal').classList.remove('hidden');
         }
 
-        function closeStaffModal() {
-            document.getElementById('staff-modal').classList.add('hidden');
+        function openDayoffModal() {
+            document.getElementById('dayoff-form').reset();
+            document.getElementById('dayoff-modal').classList.remove('hidden');
         }
 
-        // QR System exposed globally
+        function closeModal(id) { document.getElementById(id).classList.add('hidden'); }
+
         window.openQrModal = function(staffId, staffName, action) {
             const modal = document.getElementById('qr-modal');
             const baseUrl = window.location.href.split('?')[0];
             const targetUrl = `${baseUrl}?staffId=${staffId}&action=${action}`;
-            
             document.getElementById('qr-title').innerText = staffName;
             document.getElementById('qr-subtitle').innerHTML = `Scan to <span class="font-bold uppercase ${action === 'in' ? 'text-green-600' : 'text-orange-600'}">${action === 'in' ? 'Check-In' : 'Check-Out'}</span>`;
             document.getElementById('qr-image').src = `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(targetUrl)}`;
             modal.classList.remove('hidden');
-        };
-
-        window.closeQrModal = function() {
-            document.getElementById('qr-modal').classList.add('hidden');
-            document.getElementById('qr-image').src = '';
         };
     </script>
 </body>
