@@ -67,6 +67,7 @@
             <button onclick="switchTab('logs')" id="tab-logs" class="flex-1 min-w-[120px] py-3 text-center tab-inactive transition-colors text-sm"><i class="fa-solid fa-list-check mb-1 block text-lg"></i> Attendance</button>
             <button onclick="switchTab('staff')" id="tab-staff" class="flex-1 min-w-[120px] py-3 text-center tab-inactive transition-colors text-sm"><i class="fa-solid fa-users-gear mb-1 block text-lg"></i> Staff Mgmt</button>
             <button onclick="switchTab('payroll')" id="tab-payroll" class="flex-1 min-w-[120px] py-3 text-center tab-inactive transition-colors text-sm"><i class="fa-solid fa-file-invoice-dollar mb-1 block text-lg"></i> Payroll & Roster</button>
+            <button onclick="switchTab('bot')" id="tab-bot" class="flex-1 min-w-[120px] py-3 text-center tab-inactive transition-colors text-sm"><i class="fa-solid fa-robot mb-1 block text-lg"></i> Bot Replies</button>
         </div>
 
         <main class="p-4 max-w-5xl mx-auto w-full">
@@ -203,6 +204,40 @@
                     </div>
                     <div id="dayoff-calendar-view" class="hidden mt-4">
                         <!-- Calendar injected here -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- SECTION: BOT AUTO-REPLY -->
+            <div id="section-bot" class="hidden space-y-6">
+                <div class="bg-yellow-50 border-l-4 border-yellow-400 p-4 rounded text-sm text-yellow-800 shadow-sm">
+                    <p class="font-bold"><i class="fa-solid fa-triangle-exclamation mr-1"></i> Important Note for Auto-Reply:</p>
+                    <p>The auto-reply system listens for commands and responds automatically <strong>only while this admin page is open in your browser</strong>. To add these commands to your bot's popup menu, message <strong>@BotFather</strong> on Telegram, type <code>/setcommands</code>, select your bot, and type your commands (e.g., <code>start - Welcome Message</code>).</p>
+                </div>
+
+                <div class="flex flex-col md:flex-row gap-6">
+                    <!-- Add Command Form -->
+                    <div class="bg-white p-5 rounded-xl shadow-sm border border-cafe-100 md:w-1/3 h-fit">
+                        <h2 class="font-bold text-cafe-800 text-lg mb-4"><i class="fa-solid fa-plus-circle mr-2"></i> Add Command</h2>
+                        <form id="bot-form" class="space-y-4">
+                            <div>
+                                <label class="block text-sm font-bold text-gray-700 mb-1">Command Trigger</label>
+                                <input type="text" id="bot-command-input" placeholder="e.g. /start" class="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-cafe-500 outline-none" required>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-bold text-gray-700 mb-1">Auto-Reply Text</label>
+                                <textarea id="bot-reply-input" rows="4" placeholder="Type the message the bot should reply with..." class="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-cafe-500 outline-none" required></textarea>
+                            </div>
+                            <button type="submit" id="bot-submit-btn" class="w-full py-2 bg-cafe-600 text-white rounded-lg font-bold hover:bg-cafe-800 transition-colors">Save Command</button>
+                        </form>
+                    </div>
+
+                    <!-- Command List -->
+                    <div class="bg-white p-5 rounded-xl shadow-sm border border-cafe-100 md:w-2/3">
+                        <h2 class="font-bold text-cafe-800 text-lg mb-4"><i class="fa-solid fa-list mr-2"></i> Active Auto-Replies <span class="text-xs bg-green-100 text-green-700 px-2 py-1 rounded ml-2 animate-pulse"><i class="fa-solid fa-circle text-[8px]"></i> Listening</span></h2>
+                        <div id="bot-commands-container" class="space-y-3">
+                            <!-- Commands injected here -->
+                        </div>
                     </div>
                 </div>
             </div>
@@ -378,7 +413,9 @@
         let globalStaff = [];
         let globalLogs = [];
         let globalDayOffs = [];
+        let globalCommands = [];
         let chartInstance = null;
+        let lastUpdateId = 0; // For Telegram Polling
 
         // Check Mode (Scan vs Admin)
         const urlParams = new URLSearchParams(window.location.search);
@@ -481,6 +518,7 @@
             document.getElementById('dayoff-form').addEventListener('submit', handleDayoffSubmit);
             document.getElementById('auto-dayoff-form').addEventListener('submit', handleAutoDayoffSubmit);
             document.getElementById('edit-log-form').addEventListener('submit', handleEditLogSubmit);
+            document.getElementById('bot-form').addEventListener('submit', handleBotCommandSubmit);
 
             // Listeners
             onSnapshot(collection(db, 'staff'), (snapshot) => {
@@ -500,6 +538,45 @@
                 globalDayOffs.sort((a, b) => new Date(b.date) - new Date(a.date));
                 refreshAllViews();
             });
+
+            onSnapshot(collection(db, 'bot_commands'), (snapshot) => {
+                globalCommands = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                renderBotCommands();
+            });
+
+            // Start background Telegram listener for auto-replies
+            pollTelegramUpdates();
+        }
+
+        // --- TELEGRAM AUTO-REPLY POLLING ---
+        async function pollTelegramUpdates() {
+            try {
+                // Only poll if there are commands to check
+                if (globalCommands.length > 0) {
+                    const res = await fetch(`https://api.telegram.org/bot${TELEGRAM_TOKEN}/getUpdates?offset=${lastUpdateId + 1}&timeout=5`);
+                    const data = await res.json();
+                    if (data.ok && data.result.length > 0) {
+                        for (const update of data.result) {
+                            lastUpdateId = update.update_id;
+                            if (update.message && update.message.text) {
+                                const text = update.message.text.trim();
+                                const cmd = globalCommands.find(c => c.command === text);
+                                if (cmd) {
+                                    await fetch(`https://api.telegram.org/bot${TELEGRAM_TOKEN}/sendMessage`, {
+                                        method: 'POST',
+                                        headers: {'Content-Type': 'application/json'},
+                                        body: JSON.stringify({chat_id: update.message.chat.id, text: cmd.replyText})
+                                    });
+                                }
+                            }
+                        }
+                    }
+                }
+            } catch (e) {
+                // Silently ignore connection errors to prevent console spam
+            }
+            // Poll again after 3 seconds
+            setTimeout(pollTelegramUpdates, 3000);
         }
 
         // --- DATA RENDERING ---
@@ -752,8 +829,8 @@
             const firstDay = new Date(currentYear, currentMonth, 1).getDay();
             const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
 
-            let html = `<div class="grid grid-cols-7 gap-1 text-center text-xs font-bold text-gray-500 mb-2">
-                <div>Sun</div><div>Mon</div><div>Tue</div><div>Wed</div><div>Thu</div><div>Fri</div><div>Sat</div>
+            let html = `<div class="grid grid-cols-7 gap-1 text-center text-[10px] sm:text-xs font-bold text-gray-500 mb-2">
+                <div class="text-red-500">អាទិត្យ<br>(Sun)</div><div>ចន្ទ<br>(Mon)</div><div>អង្គារ<br>(Tue)</div><div>ពុធ<br>(Wed)</div><div>ព្រហស្បតិ៍<br>(Thu)</div><div>សុក្រ<br>(Fri)</div><div class="text-red-500">សៅរ៍<br>(Sat)</div>
             </div><div class="grid grid-cols-7 gap-1">`;
 
             for(let i=0; i<firstDay; i++) {
@@ -763,19 +840,40 @@
             for(let day=1; day<=daysInMonth; day++) {
                 const dateStr = `${currentYear}-${String(currentMonth + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
                 const dayOffsToday = globalDayOffs.filter(d => d.date === dateStr);
+                const currentDayOfWeek = new Date(currentYear, currentMonth, day).getDay();
+                const isWeekend = currentDayOfWeek === 0 || currentDayOfWeek === 6;
                 
                 let badges = dayOffsToday.map(dOff => {
                     const staff = globalStaff.find(s => s.id === dOff.staffId);
                     return `<div class="text-[10px] bg-blue-100 text-blue-800 px-1 py-0.5 rounded mt-1 truncate" title="${staff ? staff.name : 'Unknown'}">${staff ? staff.name.split(' ')[0] : '?'}</div>`;
                 }).join('');
 
-                html += `<div class="p-1.5 sm:p-2 border border-gray-100 rounded-lg min-h-[70px] text-left flex flex-col">
-                    <span class="font-bold text-gray-700 text-xs">${day}</span>
+                const bgClass = isWeekend ? 'bg-red-50 border-red-100 opacity-60' : 'border-gray-100';
+                const textClass = isWeekend ? 'text-red-500' : 'text-gray-700';
+
+                html += `<div class="p-1.5 sm:p-2 border rounded-lg min-h-[70px] text-left flex flex-col ${bgClass}">
+                    <span class="font-bold text-xs ${textClass}">${day}</span>
                     <div class="mt-1 flex-1 space-y-1">${badges}</div>
                 </div>`;
             }
             html += `</div>`;
             calContainer.innerHTML = html;
+        }
+
+        function renderBotCommands() {
+            const container = document.getElementById('bot-commands-container');
+            if (globalCommands.length === 0) {
+                container.innerHTML = `<p class="text-gray-500 text-center py-4 text-sm italic">No auto-replies configured.</p>`;
+                return;
+            }
+            container.innerHTML = globalCommands.map(cmd => `
+                <div class="flex justify-between items-start p-3 rounded-lg border border-gray-200 bg-gray-50 group">
+                    <div class="w-full">
+                        <div class="font-bold text-cafe-900 bg-cafe-100 inline-block px-2 py-1 rounded text-sm mb-2">${cmd.command}</div>
+                        <div class="text-sm text-gray-700 whitespace-pre-wrap">${cmd.replyText}</div>
+                    </div>
+                    <button onclick="window.deleteDataDB('bot_commands', '${cmd.id}')" class="text-red-400 hover:text-red-600 opacity-0 group-hover:opacity-100 transition-opacity ml-4"><i class="fa-solid fa-trash"></i></button>
+                </div>`).join('');
         }
 
         // --- CRUD ACTIONS ---
@@ -829,6 +927,13 @@
             const date = document.getElementById('dayoff-date-input').value;
             const reason = document.getElementById('dayoff-reason-input').value.trim();
             
+            // Check for weekend
+            const dateObj = new Date(date);
+            if (dateObj.getDay() === 0 || dateObj.getDay() === 6) {
+                alert("Error: Staff cannot take day-offs on Saturdays or Sundays.");
+                return;
+            }
+
             const btn = document.getElementById('dayoff-submit-btn');
             btn.disabled = true; btn.innerText = "Assigning...";
             try {
@@ -859,8 +964,19 @@
                 let availableDays = [];
                 for(let i=1; i<=daysInMonth; i++) {
                     const dateStr = `${year}-${month}-${String(i).padStart(2, '0')}`;
+                    const dObj = new Date(year, month - 1, i);
+                    
+                    // Skip weekends (0 = Sunday, 6 = Saturday)
+                    if (dObj.getDay() === 0 || dObj.getDay() === 6) continue;
+
                     const alreadyOff = globalDayOffs.some(d => d.staffId === staffId && d.date === dateStr);
                     if(!alreadyOff) availableDays.push(dateStr);
+                }
+
+                if (availableDays.length < count) {
+                    alert(`Not enough available weekdays to generate ${count} days off.`);
+                    btn.disabled = false; btn.innerText = "Generate";
+                    return;
                 }
 
                 availableDays.sort(() => 0.5 - Math.random());
@@ -882,23 +998,28 @@
             } catch(error) {
                 alert("Error: " + error.message);
             } finally {
-                btn.disabled = false; btn.innerText = "Generate";
-            }
+                btn.disabled = false; btn.innerText = "Update Log"; }
         }
 
-        async function handleEditLogSubmit(e) {
+        async function handleBotCommandSubmit(e) {
             e.preventDefault();
-            const id = document.getElementById('edit-log-id').value;
-            const action = document.getElementById('edit-log-action').value;
-            const status = document.getElementById('edit-log-status').value;
+            const command = document.getElementById('bot-command-input').value.trim();
+            const replyText = document.getElementById('bot-reply-input').value.trim();
             
-            const btn = document.getElementById('edit-log-submit-btn');
-            btn.disabled = true; btn.innerText = "Updating...";
+            const btn = document.getElementById('bot-submit-btn');
+            btn.disabled = true; btn.innerText = "Saving...";
             try {
-                await updateDoc(doc(db, 'logs', id), { action, status });
-                closeModal('edit-log-modal');
+                // Ensure command starts with a slash if user forgot it, for standardization (optional but helpful)
+                const formattedCommand = command.startsWith('/') ? command : `/${command}`;
+                
+                await addDoc(collection(db, 'bot_commands'), { 
+                    command: formattedCommand, 
+                    replyText: replyText, 
+                    createdAt: Date.now() 
+                });
+                document.getElementById('bot-form').reset();
             } catch (error) { alert("Error: " + error.message); } 
-            finally { btn.disabled = false; btn.innerText = "Update Log"; }
+            finally { btn.disabled = false; btn.innerText = "Save Command"; }
         }
 
         window.deleteDataDB = async (collectionName, id) => {
@@ -1021,7 +1142,7 @@
 
     <!-- Global UI Scripts -->
     <script>
-        const tabs = ['dashboard', 'logs', 'staff', 'payroll'];
+        const tabs = ['dashboard', 'logs', 'staff', 'payroll', 'bot'];
         function switchTab(activeId) {
             tabs.forEach(tab => {
                 document.getElementById(`section-${tab}`).classList.add('hidden');
