@@ -74,7 +74,12 @@
             
             <!-- SECTION: DASHBOARD OVERVIEW -->
             <div id="section-dashboard" class="space-y-6">
-                <h2 class="text-2xl font-black text-cafe-800 mb-2">Today's Overview</h2>
+                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-end mb-2 gap-3">
+                    <h2 class="text-2xl font-black text-cafe-800">Today's Overview</h2>
+                    <button onclick="window.broadcastDailySummary()" class="bg-[#0088cc] text-white px-3 py-2 rounded-lg text-sm font-bold shadow hover:bg-[#006699] transition-colors">
+                        <i class="fa-solid fa-paper-plane mr-1"></i> Send Daily Summary
+                    </button>
+                </div>
                 
                 <!-- Stats Grid -->
                 <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
@@ -96,6 +101,34 @@
                     </div>
                 </div>
 
+                <!-- Performance & Evaluation -->
+                <div class="bg-white p-5 rounded-xl shadow-sm border border-cafe-100 overflow-hidden">
+                    <div class="flex justify-between items-center mb-4 border-b pb-3">
+                        <div>
+                            <h2 class="font-bold text-cafe-800 text-lg"><i class="fa-solid fa-star-half-stroke mr-2 text-yellow-500"></i> Staff Performance Evaluation</h2>
+                            <p class="text-xs text-gray-500 mt-1">Evaluated based on Monthly Late instances (Good, Nice, Bad)</p>
+                        </div>
+                        <button onclick="window.broadcastPerformanceToTelegram()" class="bg-[#0088cc] text-white px-3 py-2 rounded-lg text-sm font-bold shadow hover:bg-[#006699] transition-colors">
+                            <i class="fa-solid fa-paper-plane mr-1"></i> Send Report
+                        </button>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left text-sm">
+                            <thead class="bg-gray-50 text-gray-600 font-semibold border-b">
+                                <tr>
+                                    <th class="p-3">Staff Member</th>
+                                    <th class="p-3">This Week <span class="text-xs font-normal">(Present/Late)</span></th>
+                                    <th class="p-3">This Month <span class="text-xs font-normal">(Present/Late)</span></th>
+                                    <th class="p-3">Evaluation</th>
+                                </tr>
+                            </thead>
+                            <tbody id="performance-table-body" class="divide-y divide-gray-100">
+                                <!-- Injected via JS -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
                 <!-- Recent Activity Preview -->
                 <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
                     <div class="bg-gray-50 px-4 py-3 border-b border-gray-100 font-bold text-cafe-800 flex justify-between">
@@ -111,8 +144,17 @@
             <!-- SECTION: LOGS -->
             <div id="section-logs" class="hidden space-y-4">
                 <div class="bg-white p-5 rounded-xl shadow-sm border border-cafe-100">
-                    <div class="flex justify-between items-center mb-4 border-b pb-2">
+                    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 border-b pb-2 gap-3">
                         <h2 class="font-bold text-cafe-800 text-lg"><i class="fa-solid fa-clock-rotate-left mr-2"></i> Attendance Logbook</h2>
+                        <div class="flex gap-4 items-center">
+                            <label class="flex items-center gap-2 text-sm cursor-pointer text-gray-600 font-semibold select-none">
+                                <input type="checkbox" id="selectAllLogs" onclick="window.toggleSelectAllLogs(this)" class="w-4 h-4 rounded border-gray-300 text-cafe-600">
+                                Select All
+                            </label>
+                            <button onclick="window.deleteSelectedLogs()" class="bg-red-50 text-red-600 px-3 py-1.5 rounded-lg text-sm font-bold border border-red-200 hover:bg-red-100 transition-colors disabled:opacity-50 disabled:cursor-not-allowed" id="btn-delete-selected" disabled>
+                                <i class="fa-solid fa-trash mr-1"></i> Delete Selected
+                            </button>
+                        </div>
                     </div>
                     <div id="logs-container" class="space-y-2 max-h-[70vh] overflow-y-auto pr-2">
                         <!-- Logs will be injected here -->
@@ -589,6 +631,7 @@
         // --- DATA RENDERING ---
         window.refreshAllViews = function() {
             renderDashboard();
+            renderPerformanceOverview();
             renderLogs();
             renderStaff();
             renderPayrollAndChart();
@@ -649,10 +692,72 @@
             }
         }
 
+        function renderPerformanceOverview() {
+            const tbody = document.getElementById('performance-table-body');
+            if (globalStaff.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="4" class="p-4 text-center text-gray-500">No staff found.</td></tr>`;
+                return;
+            }
+
+            const now = new Date();
+            const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1).getTime();
+            
+            // Calculate Start of Current Week (Monday)
+            const day = now.getDay() || 7; 
+            const startOfWeek = new Date(now.getFullYear(), now.getMonth(), now.getDate() - day + 1).setHours(0,0,0,0);
+
+            let html = '';
+            window.currentPerformanceData = []; // Store for Telegram Broadcast
+
+            globalStaff.forEach(staff => {
+                const staffLogs = globalLogs.filter(l => l.staffId === staff.id && l.action === 'Check-In');
+                
+                const monthLogs = staffLogs.filter(l => l.timestamp >= startOfMonth);
+                const weekLogs = staffLogs.filter(l => l.timestamp >= startOfWeek);
+
+                const monthLate = monthLogs.filter(l => l.status && l.status.startsWith('Late')).length;
+                const weekLate = weekLogs.filter(l => l.status && l.status.startsWith('Late')).length;
+
+                // Evaluate based on Month Lates
+                let evalText = 'Good';
+                let evalClass = 'bg-green-100 text-green-800 border-green-200';
+                
+                if (monthLate >= 4) {
+                    evalText = 'Bad';
+                    evalClass = 'bg-red-100 text-red-800 border-red-200';
+                } else if (monthLate >= 2) {
+                    evalText = 'Nice';
+                    evalClass = 'bg-yellow-100 text-yellow-800 border-yellow-200';
+                }
+
+                window.currentPerformanceData.push({
+                    name: staff.name,
+                    monthPresent: monthLogs.length,
+                    monthLate: monthLate,
+                    evaluation: evalText
+                });
+
+                html += `
+                <tr class="hover:bg-gray-50 transition-colors group">
+                    <td class="p-3 font-bold text-cafe-900 flex items-center gap-2"><i class="fa-solid fa-user text-gray-400"></i> ${staff.name}</td>
+                    <td class="p-3 text-gray-600"><span class="text-green-600 font-bold px-2">${weekLogs.length}</span> / <span class="text-red-500 font-bold px-2">${weekLate}</span></td>
+                    <td class="p-3 text-gray-600"><span class="text-green-600 font-bold px-2">${monthLogs.length}</span> / <span class="text-red-500 font-bold px-2">${monthLate}</span></td>
+                    <td class="p-3 flex justify-between items-center">
+                        <span class="${evalClass} border px-2 py-1 rounded text-xs font-bold uppercase tracking-wider">${evalText}</span>
+                        <button onclick="window.sendSinglePerformance('${staff.name}', ${monthLogs.length}, ${monthLate}, '${evalText}')" class="text-blue-500 hover:text-blue-700 opacity-0 group-hover:opacity-100 transition-opacity" title="Send Report to Telegram"><i class="fa-solid fa-paper-plane"></i></button>
+                    </td>
+                </tr>`;
+            });
+
+            tbody.innerHTML = html;
+        }
+
         function renderLogs() {
             const container = document.getElementById('logs-container');
             if (globalLogs.length === 0) {
                 container.innerHTML = `<p class="text-gray-500 text-center py-4 text-sm italic">No records found.</p>`;
+                const btn = document.getElementById('btn-delete-selected');
+                if (btn) btn.disabled = true;
                 return;
             }
 
@@ -664,9 +769,12 @@
                 
                 return `
                 <div class="flex justify-between items-center p-3 rounded-lg border ${borderColor} group">
-                    <div>
-                        <div class="font-bold text-cafe-900">${log.staffName}</div>
-                        <div class="text-xs font-bold uppercase ${textCol}">${isLate ? `<i class="fa-solid fa-warning mr-1"></i> ${log.status}` : log.action}</div>
+                    <div class="flex items-center gap-3">
+                        <input type="checkbox" class="log-checkbox w-4 h-4 rounded border-gray-300 text-cafe-600 cursor-pointer" value="${log.id}" onchange="window.updateDeleteButtonState()">
+                        <div>
+                            <div class="font-bold text-cafe-900">${log.staffName}</div>
+                            <div class="text-xs font-bold uppercase ${textCol}">${isLate ? `<i class="fa-solid fa-warning mr-1"></i> ${log.status}` : log.action}</div>
+                        </div>
                     </div>
                     <div class="flex items-center gap-4">
                         <div class="text-right">
@@ -680,6 +788,9 @@
                     </div>
                 </div>`;
             }).join('');
+            
+            // Re-evaluate select all checkbox state when rendered
+            window.updateDeleteButtonState();
         }
 
         function renderStaff() {
@@ -1051,6 +1162,48 @@
             }
         };
 
+        window.toggleSelectAllLogs = function(checkbox) {
+            const checkboxes = document.querySelectorAll('.log-checkbox');
+            checkboxes.forEach(cb => cb.checked = checkbox.checked);
+            window.updateDeleteButtonState();
+        };
+
+        window.updateDeleteButtonState = function() {
+            const checkboxes = document.querySelectorAll('.log-checkbox:checked');
+            const totalCb = document.querySelectorAll('.log-checkbox');
+            const btn = document.getElementById('btn-delete-selected');
+            const selectAllCb = document.getElementById('selectAllLogs');
+            
+            if(btn) btn.disabled = checkboxes.length === 0;
+            if(selectAllCb && totalCb.length > 0) {
+                selectAllCb.checked = checkboxes.length === totalCb.length;
+            }
+        };
+
+        window.deleteSelectedLogs = async function() {
+            const checkboxes = document.querySelectorAll('.log-checkbox:checked');
+            const idsToDelete = Array.from(checkboxes).map(cb => cb.value);
+            
+            if(idsToDelete.length === 0) return;
+            if(!confirm(`Are you sure you want to delete ${idsToDelete.length} selected records?`)) return;
+
+            const btn = document.getElementById('btn-delete-selected');
+            const ogText = btn.innerHTML;
+            btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> Deleting...`;
+            btn.disabled = true;
+            
+            try {
+                for(const id of idsToDelete) {
+                    await deleteDoc(doc(db, 'logs', id));
+                }
+                document.getElementById('selectAllLogs').checked = false;
+            } catch(e) {
+                alert("Error deleting logs.");
+            } finally {
+                btn.innerHTML = ogText;
+            }
+        };
+
         window.editStaffUI = (id) => {
             const staff = globalStaff.find(s => s.id === id);
             if(staff) {
@@ -1139,6 +1292,123 @@
                 }
                 alert("Failed to send to Telegram. Error: " + e.message);
                 console.error(e);
+            }
+        };
+
+        window.broadcastPerformanceToTelegram = async () => {
+            if (!window.currentPerformanceData || window.currentPerformanceData.length === 0) {
+                alert("No performance data available to send.");
+                return;
+            }
+
+            const monthName = new Date().toLocaleString('default', { month: 'long', year: 'numeric' });
+            let text = `📊 <b>Staff Performance Evaluation (${monthName})</b>\n\n`;
+
+            window.currentPerformanceData.forEach(p => {
+                let emoji = p.evaluation === 'Good' ? '🌟' : (p.evaluation === 'Nice' ? '👍' : '⚠️');
+                text += `🧑‍🍳 <b>${p.name}</b>\n`;
+                text += `   ├ Present: ${p.monthPresent} days\n`;
+                text += `   ├ Late: ${p.monthLate} times\n`;
+                text += `   └ Rating: ${emoji} <b>${p.evaluation}</b>\n\n`;
+            });
+
+            const btn = window.event ? window.event.currentTarget : null;
+            let ogText = "";
+            if (btn) {
+                ogText = btn.innerHTML;
+                btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin mr-1"></i> Sending...`;
+                btn.disabled = true;
+            }
+
+            const url = `https://api.telegram.org/bot${TELEGRAM_TOKEN}/sendMessage`;
+            try {
+                const response = await fetch(url, { 
+                    method: 'POST', 
+                    headers: { 'Content-Type': 'application/json' }, 
+                    body: JSON.stringify({ chat_id: TELEGRAM_CHAT_ID, text: text, parse_mode: 'HTML' }) 
+                });
+                
+                if (!response.ok) throw new Error("Telegram API Error");
+                
+                if (btn) { btn.innerHTML = ogText; btn.disabled = false; }
+                alert("Performance Report successfully broadcasted to Telegram!");
+            } catch(e) {
+                if (btn) { btn.innerHTML = ogText; btn.disabled = false; }
+                alert("Failed to send report.");
+                console.error(e);
+            }
+        };
+
+        window.sendSinglePerformance = async (staffName, present, late, evaluation) => {
+            const monthName = new Date().toLocaleString('default', { month: 'long', year: 'numeric' });
+            let emoji = evaluation === 'Good' ? '🌟' : (evaluation === 'Nice' ? '👍' : '⚠️');
+            
+            let text = `📊 <b>Performance Review (${monthName})</b>\n\n`;
+            text += `🧑‍🍳 <b>${staffName}</b>\n`;
+            text += `   ├ Present: ${present} days\n`;
+            text += `   ├ Late: ${late} times\n`;
+            text += `   └ Rating: ${emoji} <b>${evaluation}</b>`;
+
+            const btn = window.event ? window.event.currentTarget : null;
+            
+            const url = `https://api.telegram.org/bot${TELEGRAM_TOKEN}/sendMessage`;
+            try {
+                if(btn) btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i>`;
+                const response = await fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ chat_id: TELEGRAM_CHAT_ID, text: text, parse_mode: 'HTML' }) });
+                if (!response.ok) throw new Error("Telegram API Error");
+                if(btn) btn.innerHTML = `<i class="fa-solid fa-check text-green-500"></i>`;
+                setTimeout(() => { if(btn) btn.innerHTML = `<i class="fa-solid fa-paper-plane"></i>`; }, 2000);
+            } catch(e) {
+                if(btn) btn.innerHTML = `<i class="fa-solid fa-paper-plane"></i>`;
+                alert("Failed to send report.");
+            }
+        };
+
+        window.broadcastDailySummary = async () => {
+            const todayStart = new Date();
+            todayStart.setHours(0, 0, 0, 0);
+            const todayLogs = globalLogs.filter(log => log.timestamp >= todayStart.getTime());
+            
+            const presentLogs = todayLogs.filter(l => l.action === 'Check-In');
+            const presentStaffIds = new Set(presentLogs.map(l => l.staffId));
+            const lateLogs = todayLogs.filter(l => l.action === 'Check-In' && l.status && l.status.startsWith('Late'));
+            
+            const absentStaff = globalStaff.filter(s => !presentStaffIds.has(s.id));
+
+            let text = `📋 <b>Daily Attendance Summary</b>\n📅 <i>${new Date().toLocaleDateString()}</i>\n\n`;
+            text += `👥 <b>Total Staff:</b> ${globalStaff.length}\n`;
+            text += `✅ <b>Present:</b> ${presentStaffIds.size}\n`;
+            text += `🔴 <b>Absent:</b> ${absentStaff.length}\n`;
+            text += `⚠️ <b>Late:</b> ${lateLogs.length}\n\n`;
+            
+            if (lateLogs.length > 0) {
+                text += `<b>Lates Today:</b>\n`;
+                lateLogs.forEach(l => {
+                    text += `   ├ ${l.staffName} (${l.status})\n`;
+                });
+                text += `\n`;
+            }
+
+            if (absentStaff.length > 0) {
+                text += `<b>Absent Today:</b>\n`;
+                absentStaff.forEach(s => {
+                    text += `   ├ ${s.name}\n`;
+                });
+            }
+
+            const btn = window.event ? window.event.currentTarget : null;
+            let ogText = "";
+            if (btn) { ogText = btn.innerHTML; btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin mr-1"></i> Sending...`; btn.disabled = true; }
+
+            const url = `https://api.telegram.org/bot${TELEGRAM_TOKEN}/sendMessage`;
+            try {
+                const response = await fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ chat_id: TELEGRAM_CHAT_ID, text: text, parse_mode: 'HTML' }) });
+                if (!response.ok) throw new Error("Telegram API Error");
+                if (btn) { btn.innerHTML = ogText; btn.disabled = false; }
+                alert("Daily summary broadcasted to Telegram!");
+            } catch(e) {
+                if (btn) { btn.innerHTML = ogText; btn.disabled = false; }
+                alert("Failed to send summary.");
             }
         };
 
