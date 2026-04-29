@@ -4,9 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Café Management & Attendance</title>
-    <!-- Tailwind CSS for Styling -->
+    <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- FontAwesome for Icons -->
+    <!-- FontAwesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
     <script>
@@ -15,12 +15,8 @@
                 extend: {
                     colors: {
                         cafe: {
-                            50: '#fdf8f6',
-                            100: '#f2e8e5',
-                            500: '#8c6b5d',
-                            600: '#6b4c3a',
-                            800: '#4a3219',
-                            900: '#2e1c0d',
+                            50: '#fdf8f6', 100: '#f2e8e5', 500: '#8c6b5d',
+                            600: '#6b4c3a', 800: '#4a3219', 900: '#2e1c0d',
                         }
                     }
                 }
@@ -29,8 +25,9 @@
     </script>
     <style>
         body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #fdf8f6; }
-        .tab-active { border-bottom: 2px solid #6b4c3a; color: #4a3219; font-weight: bold; }
-        .tab-inactive { color: #9ca3af; }
+        .tab-active { border-bottom: 3px solid #6b4c3a; color: #4a3219; font-weight: bold; background-color: #fdf8f6; }
+        .tab-inactive { color: #6b7280; background-color: white; }
+        .hide-scroll::-webkit-scrollbar { display: none; }
     </style>
 </head>
 <body class="text-cafe-900 min-h-screen flex flex-col">
@@ -41,78 +38,181 @@
         <h2 class="text-xl font-bold text-cafe-800">Loading System...</h2>
     </div>
 
-    <!-- 1. STAFF SCAN ENDPOINT VIEW -->
+    <!-- 1. STAFF SCAN ENDPOINT VIEW (For QR Code redirects) -->
     <div id="scan-view" class="hidden flex-grow flex flex-col items-center justify-center p-6 text-center">
         <div id="scan-status" class="bg-white p-8 rounded-2xl shadow-xl border border-cafe-100 max-w-sm w-full">
             <i class="fa-solid fa-spinner fa-spin text-cafe-500 text-6xl mb-4"></i>
-            <h2 class="text-2xl font-bold text-cafe-800">Processing...</h2>
-            <p class="text-gray-500 mt-2">Please wait while we record your attendance.</p>
+            <h2 class="text-2xl font-bold text-cafe-800">Processing Scan...</h2>
+            <p class="text-gray-500 mt-2">Recording your attendance to the server.</p>
         </div>
     </div>
 
     <!-- 2. ADMIN DASHBOARD VIEW -->
     <div id="admin-view" class="hidden flex-grow flex flex-col">
         <!-- Header -->
-        <header class="bg-cafe-800 text-white p-4 shadow-md flex justify-between items-center">
+        <header class="bg-cafe-800 text-white p-4 shadow-md flex justify-between items-center z-10 relative">
             <div>
-                <h1 class="text-xl font-bold tracking-wide"><i class="fa-solid fa-mug-hot mr-2"></i> Café Admin</h1>
+                <h1 class="text-xl font-bold tracking-wide"><i class="fa-solid fa-mug-hot mr-2"></i> Café Admin Pro</h1>
             </div>
-            <div class="text-xs bg-cafe-900 px-3 py-1 rounded-full text-cafe-100">
-                <i class="fa-solid fa-circle text-green-400 mr-1 text-[10px]"></i> Live System
+            <div class="text-xs bg-cafe-900 px-3 py-1 rounded-full text-cafe-100 border border-cafe-600">
+                <i class="fa-solid fa-circle text-green-400 mr-1 text-[10px] animate-pulse"></i> Live Sync
             </div>
         </header>
 
-        <!-- Navigation -->
-        <div class="bg-white flex border-b border-gray-200">
-            <button onclick="switchTab('logs')" id="tab-logs" class="flex-1 py-3 text-center tab-active transition-colors"><i class="fa-solid fa-list mr-2"></i> Attendance Logs</button>
-            <button onclick="switchTab('staff')" id="tab-staff" class="flex-1 py-3 text-center tab-inactive transition-colors"><i class="fa-solid fa-users-gear mr-2"></i> Manage Staff</button>
+        <!-- Navigation Tabs -->
+        <div class="flex border-b border-gray-200 overflow-x-auto hide-scroll shadow-sm z-0 relative">
+            <button onclick="switchTab('dashboard')" id="tab-dashboard" class="flex-1 min-w-[120px] py-3 text-center tab-active transition-colors text-sm"><i class="fa-solid fa-chart-pie mb-1 block text-lg"></i> Overview</button>
+            <button onclick="switchTab('logs')" id="tab-logs" class="flex-1 min-w-[120px] py-3 text-center tab-inactive transition-colors text-sm"><i class="fa-solid fa-list-check mb-1 block text-lg"></i> Attendance</button>
+            <button onclick="switchTab('staff')" id="tab-staff" class="flex-1 min-w-[120px] py-3 text-center tab-inactive transition-colors text-sm"><i class="fa-solid fa-users-gear mb-1 block text-lg"></i> Staff Mgmt</button>
+            <button onclick="switchTab('payroll')" id="tab-payroll" class="flex-1 min-w-[120px] py-3 text-center tab-inactive transition-colors text-sm"><i class="fa-solid fa-file-invoice-dollar mb-1 block text-lg"></i> Payroll & Roster</button>
         </div>
 
-        <main class="p-4 max-w-3xl mx-auto w-full">
+        <main class="p-4 max-w-5xl mx-auto w-full">
             
-            <!-- Warning Banner -->
-            <div id="host-warning" class="hidden mb-4 bg-yellow-100 border-l-4 border-yellow-500 text-yellow-700 p-3 rounded text-sm shadow-sm">
-                <p><strong>Notice:</strong> You are viewing this on a local file. To ensure QR codes work for staff, host this file on a web server (like Vercel, Netlify, or Firebase Hosting) before generating QR codes.</p>
-            </div>
+            <!-- SECTION: DASHBOARD OVERVIEW -->
+            <div id="section-dashboard" class="space-y-6">
+                <h2 class="text-2xl font-black text-cafe-800 mb-2">Today's Overview</h2>
+                
+                <!-- Stats Grid -->
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                    <div class="bg-white p-4 rounded-xl shadow-sm border-l-4 border-blue-500">
+                        <div class="text-gray-500 text-xs font-bold uppercase tracking-wider mb-1">Total Staff</div>
+                        <div id="stat-total-staff" class="text-3xl font-black text-cafe-900">0</div>
+                    </div>
+                    <div class="bg-white p-4 rounded-xl shadow-sm border-l-4 border-green-500">
+                        <div class="text-gray-500 text-xs font-bold uppercase tracking-wider mb-1">Present Today</div>
+                        <div id="stat-present" class="text-3xl font-black text-green-600">0</div>
+                    </div>
+                    <div class="bg-white p-4 rounded-xl shadow-sm border-l-4 border-red-500">
+                        <div class="text-gray-500 text-xs font-bold uppercase tracking-wider mb-1">Late Today</div>
+                        <div id="stat-late" class="text-3xl font-black text-red-600">0</div>
+                    </div>
+                    <div class="bg-white p-4 rounded-xl shadow-sm border-l-4 border-orange-500">
+                        <div class="text-gray-500 text-xs font-bold uppercase tracking-wider mb-1">Absent</div>
+                        <div id="stat-absent" class="text-3xl font-black text-orange-600">0</div>
+                    </div>
+                </div>
 
-            <!-- LOGS TAB -->
-            <div id="section-logs" class="space-y-4">
-                <div class="bg-white p-4 rounded-xl shadow-sm border border-cafe-100">
-                    <h2 class="font-bold text-cafe-800 mb-4 border-b pb-2"><i class="fa-solid fa-clock-rotate-left mr-2"></i> Recent Check-ins & Check-outs</h2>
-                    <div id="logs-container" class="space-y-2 max-h-[60vh] overflow-y-auto pr-2">
-                        <!-- Logs will be injected here -->
-                        <div class="text-center text-gray-500 py-4 italic"><i class="fa-solid fa-spinner fa-spin mr-2"></i> Loading logs...</div>
+                <!-- Recent Activity Preview -->
+                <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+                    <div class="bg-gray-50 px-4 py-3 border-b border-gray-100 font-bold text-cafe-800 flex justify-between">
+                        <span><i class="fa-solid fa-bolt mr-2 text-yellow-500"></i>Live Activity Feed</span>
+                        <button onclick="switchTab('logs')" class="text-xs text-cafe-600 hover:underline">View All</button>
+                    </div>
+                    <div id="dashboard-feed" class="p-4 space-y-3">
+                        <!-- Feed injected here -->
                     </div>
                 </div>
             </div>
 
-            <!-- STAFF TAB -->
-            <div id="section-staff" class="hidden space-y-4">
-                <!-- Add Staff Form -->
-                <div class="bg-white p-4 rounded-xl shadow-sm border border-cafe-100">
-                    <h2 class="font-bold text-cafe-800 mb-3"><i class="fa-solid fa-user-plus mr-2"></i> Add New Staff</h2>
-                    <form id="add-staff-form" class="flex gap-2">
-                        <input type="text" id="new-staff-name" placeholder="Enter staff name..." class="flex-grow px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-cafe-600 focus:ring-1 focus:ring-cafe-600" required>
-                        <button type="submit" class="bg-cafe-600 text-white px-4 py-2 rounded-lg font-semibold hover:bg-cafe-800 transition-colors shadow-sm">Add</button>
-                    </form>
+            <!-- SECTION: LOGS -->
+            <div id="section-logs" class="hidden space-y-4">
+                <div class="bg-white p-5 rounded-xl shadow-sm border border-cafe-100">
+                    <div class="flex justify-between items-center mb-4 border-b pb-2">
+                        <h2 class="font-bold text-cafe-800 text-lg"><i class="fa-solid fa-clock-rotate-left mr-2"></i> Attendance Logbook</h2>
+                    </div>
+                    <div id="logs-container" class="space-y-2 max-h-[70vh] overflow-y-auto pr-2">
+                        <!-- Logs will be injected here -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- SECTION: STAFF MANAGEMENT -->
+            <div id="section-staff" class="hidden space-y-6">
+                <!-- Add Staff Header -->
+                <div class="flex justify-between items-center">
+                    <h2 class="text-xl font-bold text-cafe-800">Manage Team</h2>
+                    <button onclick="openStaffModal()" class="bg-cafe-600 text-white px-4 py-2 rounded-lg font-bold shadow hover:bg-cafe-800 transition-colors">
+                        <i class="fa-solid fa-plus mr-1"></i> Add Staff
+                    </button>
                 </div>
 
                 <!-- Staff List -->
-                <div class="bg-white p-4 rounded-xl shadow-sm border border-cafe-100">
-                    <h2 class="font-bold text-cafe-800 mb-4 border-b pb-2"><i class="fa-solid fa-users mr-2"></i> Staff List & QR Codes</h2>
-                    <div id="staff-container" class="space-y-3">
-                        <!-- Staff items will be injected here -->
-                        <div class="text-center text-gray-500 py-4 italic"><i class="fa-solid fa-spinner fa-spin mr-2"></i> Loading staff...</div>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4" id="staff-container">
+                    <!-- Staff Cards Injected Here -->
+                </div>
+            </div>
+
+            <!-- SECTION: PAYROLL & ROSTER -->
+            <div id="section-payroll" class="hidden space-y-6">
+                <div class="bg-white p-5 rounded-xl shadow-sm border border-cafe-100 overflow-hidden">
+                    <div class="flex justify-between items-end mb-4 border-b pb-4">
+                        <div>
+                            <h2 class="font-bold text-cafe-800 text-lg"><i class="fa-solid fa-money-check-dollar mr-2"></i> Monthly Payroll Estimate</h2>
+                            <p class="text-xs text-gray-500 mt-1">Based on current month's attendance records.</p>
+                        </div>
+                        <div class="text-sm font-bold bg-cafe-100 text-cafe-800 px-3 py-1 rounded-full" id="payroll-month-label">
+                            Month
+                        </div>
+                    </div>
+                    
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left text-sm">
+                            <thead class="bg-gray-50 text-gray-600 font-semibold border-b">
+                                <tr>
+                                    <th class="p-3">Staff Name</th>
+                                    <th class="p-3">Base Salary</th>
+                                    <th class="p-3">Days Present</th>
+                                    <th class="p-3">Late Instances</th>
+                                    <th class="p-3 text-right">Est. Earnings</th>
+                                </tr>
+                            </thead>
+                            <tbody id="payroll-table-body" class="divide-y divide-gray-100">
+                                <!-- Payroll rows injected here -->
+                            </tbody>
+                        </table>
                     </div>
                 </div>
             </div>
+
         </main>
+    </div>
+
+    <!-- MODALS -->
+
+    <!-- Add/Edit Staff Modal -->
+    <div id="staff-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden transform transition-all">
+            <div class="bg-cafe-800 p-4 flex justify-between items-center text-white">
+                <h3 id="staff-modal-title" class="font-bold text-lg">Add New Staff</h3>
+                <button onclick="closeStaffModal()" class="text-white hover:text-gray-300"><i class="fa-solid fa-xmark text-xl"></i></button>
+            </div>
+            <form id="staff-form" class="p-5 space-y-4">
+                <input type="hidden" id="staff-id-input">
+                
+                <div>
+                    <label class="block text-sm font-bold text-gray-700 mb-1">Full Name</label>
+                    <input type="text" id="staff-name-input" class="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-cafe-500 outline-none" required>
+                </div>
+                
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-bold text-gray-700 mb-1">Shift Start</label>
+                        <input type="time" id="staff-start-input" class="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-cafe-500 outline-none" required defaultValue="06:00">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-bold text-gray-700 mb-1">Shift End</label>
+                        <input type="time" id="staff-end-input" class="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-cafe-500 outline-none" required defaultValue="15:00">
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-sm font-bold text-gray-700 mb-1">Base Salary ($ / Month)</label>
+                    <input type="number" id="staff-salary-input" placeholder="e.g. 500" class="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-cafe-500 outline-none" required>
+                </div>
+
+                <div class="pt-4 flex gap-3">
+                    <button type="button" onclick="closeStaffModal()" class="flex-1 py-2 bg-gray-200 text-gray-800 rounded-lg font-bold hover:bg-gray-300">Cancel</button>
+                    <button type="submit" id="staff-submit-btn" class="flex-1 py-2 bg-cafe-600 text-white rounded-lg font-bold hover:bg-cafe-800">Save Staff</button>
+                </div>
+            </form>
+        </div>
     </div>
 
     <!-- QR Code Modal -->
     <div id="qr-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-        <div class="bg-white rounded-2xl shadow-2xl p-6 max-w-sm w-full text-center relative transform transition-all">
-            <button onclick="closeModal()" class="absolute top-3 right-3 text-gray-400 hover:text-gray-800">
+        <div class="bg-white rounded-2xl shadow-2xl p-6 max-w-sm w-full text-center relative">
+            <button onclick="closeQrModal()" class="absolute top-3 right-3 text-gray-400 hover:text-gray-800">
                 <i class="fa-solid fa-xmark text-xl"></i>
             </button>
             <h3 id="qr-title" class="text-xl font-bold text-cafe-800 mb-1">QR Code</h3>
@@ -122,19 +222,18 @@
                 <img id="qr-image" src="" alt="QR Code" class="w-48 h-48 object-contain">
             </div>
             
-            <button onclick="window.print()" class="w-full bg-cafe-600 text-white py-2 rounded-lg font-bold hover:bg-cafe-800 transition-colors shadow-sm">
+            <button onclick="window.print()" class="w-full bg-cafe-600 text-white py-2 rounded-lg font-bold hover:bg-cafe-800 shadow-sm">
                 <i class="fa-solid fa-print mr-2"></i> Print QR Code
             </button>
         </div>
     </div>
 
-    <!-- Firebase & App Logic (Module) -->
+    <!-- Firebase SDKs -->
     <script type="module">
-        // Import Firebase core and Firestore modules from CDN
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
-        import { getFirestore, collection, addDoc, doc, getDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
+        import { getFirestore, collection, addDoc, doc, getDoc, updateDoc, deleteDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
 
-        // --- 1. CONFIGURATIONS ---
+        // --- CONFIGURATIONS ---
         const firebaseConfig = {
             apiKey: "AIzaSyB-pT0gkyo_Ay7XOrnPoVcAJyD7ZnLw-z8",
             authDomain: "checkin-chafe.firebaseapp.com",
@@ -144,188 +243,245 @@
             appId: "1:1087154606159:web:473aaf686512be8a72da3a",
             measurementId: "G-VXL6D96DFT"
         };
-
         const TELEGRAM_TOKEN = '8779407544:AAFaDWLWc1qXiweEgqaiYei6__LuRSbtlKs';
         const TELEGRAM_CHAT_ID = '8374277640';
 
-        // --- 2. INITIALIZATION ---
+        // --- INIT ---
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
 
-        // Check if hosted locally and warn admin
-        if (window.location.protocol === 'file:') {
-            document.getElementById('host-warning').classList.remove('hidden');
-        }
+        // Global State Arrays to avoid complex Firebase index queries
+        let globalStaff = [];
+        let globalLogs = [];
 
-        // Get URL Parameters to determine mode
+        // Check Mode (Scan vs Admin)
         const urlParams = new URLSearchParams(window.location.search);
         const staffIdParam = urlParams.get('staffId');
-        const actionParam = urlParams.get('action'); // 'in' or 'out'
+        const actionParam = urlParams.get('action');
 
         window.onload = () => {
             if (staffIdParam && actionParam) {
-                // Device is scanning the code
                 runScanEndpoint(staffIdParam, actionParam);
             } else {
-                // Device is opening the dashboard
                 initAdminDashboard();
             }
         };
 
-        // --- 3. STAFF SCAN ENDPOINT LOGIC ---
+        // --- 1. STAFF SCAN ENDPOINT LOGIC (With LATE Detection) ---
         async function runScanEndpoint(id, actionCode) {
             document.getElementById('loading-screen').classList.add('hidden');
             document.getElementById('scan-view').classList.remove('hidden');
             const statusBox = document.getElementById('scan-status');
 
             try {
-                // Check if staff exists
                 const staffRef = doc(db, 'staff', id);
                 const staffSnap = await getDoc(staffRef);
 
-                if (!staffSnap.exists()) {
-                    throw new Error("Staff ID not found in system.");
-                }
-
-                const staffName = staffSnap.data().name;
+                if (!staffSnap.exists()) throw new Error("Staff not found.");
+                
+                const staffData = staffSnap.data();
                 const actionText = actionCode === 'in' ? 'Check-In' : 'Check-Out';
                 const now = Date.now();
+                let statusDetail = "On Time";
+                let isLate = false;
 
-                // 1. Save to Firebase
+                // Late Detection Logic (Only on Check-in)
+                if (actionCode === 'in' && staffData.shiftStart) {
+                    const [hours, minutes] = staffData.shiftStart.split(':').map(Number);
+                    const shiftTime = new Date();
+                    shiftTime.setHours(hours, minutes, 0, 0);
+                    
+                    // Late if current time is > 10 mins (600,000 ms) past shift start
+                    if (now > shiftTime.getTime() + (10 * 60000)) {
+                        isLate = true;
+                        statusDetail = "Late";
+                        // Calculate how many minutes late
+                        const diffMins = Math.floor((now - shiftTime.getTime()) / 60000);
+                        statusDetail = `Late (${diffMins}m)`;
+                    }
+                }
+
+                // 1. Save Log
                 await addDoc(collection(db, 'logs'), {
                     staffId: id,
-                    staffName: staffName,
+                    staffName: staffData.name,
                     action: actionText,
+                    status: statusDetail,
                     timestamp: now
                 });
 
-                // 2. Send Telegram Alert
-                sendTelegramAlert(staffName, actionText);
+                // 2. Telegram Alert
+                sendTelegramAlert(staffData.name, actionText, isLate, statusDetail);
 
-                // 3. Show Success UI
-                const icon = actionCode === 'in' ? 'fa-right-to-bracket text-green-500' : 'fa-person-walking-arrow-right text-orange-500';
-                const color = actionCode === 'in' ? 'text-green-700' : 'text-orange-700';
+                // 3. UI Response
+                const baseColor = actionCode === 'in' ? (isLate ? 'text-red-600' : 'text-green-600') : 'text-orange-600';
+                const icon = actionCode === 'in' ? 'fa-right-to-bracket' : 'fa-person-walking-arrow-right';
                 
                 statusBox.innerHTML = `
-                    <div class="mb-4">
-                        <i class="fa-solid fa-circle-check text-green-500 text-6xl absolute opacity-20 -mt-2 -ml-8"></i>
-                        <i class="fa-solid ${icon} text-6xl relative"></i>
+                    <div class="mb-4 text-6xl ${baseColor}">
+                        <i class="fa-solid ${isLate ? 'fa-triangle-exclamation animate-bounce' : icon}"></i>
                     </div>
-                    <h2 class="text-3xl font-black ${color} mb-1">${actionText} Recorded!</h2>
-                    <p class="text-xl font-medium text-cafe-800">${staffName}</p>
-                    <div class="mt-6 pt-4 border-t border-gray-100">
-                        <p class="text-sm text-gray-500"><i class="fa-regular fa-clock mr-1"></i> ${new Date(now).toLocaleString()}</p>
-                        <p class="text-xs text-gray-400 mt-2">You can safely close this page.</p>
+                    <h2 class="text-3xl font-black ${baseColor} mb-1">${actionText} Recorded!</h2>
+                    ${isLate ? `<p class="bg-red-100 text-red-800 font-bold px-3 py-1 rounded-full inline-block mb-2 text-sm uppercase">${statusDetail}</p>` : ''}
+                    <p class="text-xl font-medium text-cafe-800">${staffData.name}</p>
+                    <div class="mt-4 pt-4 border-t border-gray-100 text-sm text-gray-500">
+                        ${new Date(now).toLocaleString()}
                     </div>
                 `;
 
             } catch (error) {
-                console.error(error);
-                statusBox.innerHTML = `
-                    <i class="fa-solid fa-circle-xmark text-red-500 text-6xl mb-4"></i>
-                    <h2 class="text-2xl font-bold text-red-700 mb-2">Scan Failed</h2>
-                    <p class="text-gray-700">${error.message || "Could not connect to database."}</p>
-                    <p class="text-xs text-gray-400 mt-4">Please contact the admin.</p>
-                `;
+                statusBox.innerHTML = `<i class="fa-solid fa-circle-xmark text-red-500 text-6xl mb-4"></i><h2 class="text-2xl font-bold text-red-700">Scan Failed</h2><p class="text-gray-700">${error.message}</p>`;
             }
         }
 
-        // --- 4. TELEGRAM FUNCTION ---
-        async function sendTelegramAlert(staffName, action) {
-            const dateStr = new Date().toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
+        async function sendTelegramAlert(staffName, action, isLate, statusDetail) {
             const timeStr = new Date().toLocaleTimeString('en-US');
-            const emoji = action === 'Check-In' ? '🟢' : '🟠';
+            let text = '';
             
-            const text = `☕ *Attendance Alert*\n\n🧑‍🍳 *Staff:* ${staffName}\n${emoji} *Status:* ${action}\n📅 *Time:* ${dateStr}, ${timeStr}`;
+            if (isLate) {
+                text = `⚠️ *LATE ALERT* ⚠️\n\n🧑‍🍳 *Staff:* ${staffName}\n🔴 *Status:* Check-In (${statusDetail})\n⏰ *Time:* ${timeStr}`;
+            } else {
+                const emoji = action === 'Check-In' ? '🟢' : '🟠';
+                text = `☕ *Attendance*\n\n🧑‍🍳 *Staff:* ${staffName}\n${emoji} *Status:* ${action}\n⏰ *Time:* ${timeStr}`;
+            }
+            
             const url = `https://api.telegram.org/bot${TELEGRAM_TOKEN}/sendMessage`;
-            
-            try {
-                await fetch(url, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        chat_id: TELEGRAM_CHAT_ID,
-                        text: text,
-                        parse_mode: 'Markdown'
-                    })
-                });
-            } catch (e) { console.error("Telegram error:", e); }
+            fetch(url, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ chat_id: TELEGRAM_CHAT_ID, text: text, parse_mode: 'Markdown' })
+            }).catch(e => console.error(e));
         }
 
-        // --- 5. ADMIN DASHBOARD LOGIC ---
+
+        // --- 2. ADMIN DASHBOARD LOGIC ---
         function initAdminDashboard() {
             document.getElementById('loading-screen').classList.add('hidden');
             document.getElementById('admin-view').classList.remove('hidden');
 
-            // Attach form submission
-            document.getElementById('add-staff-form').addEventListener('submit', handleAddStaff);
+            document.getElementById('staff-form').addEventListener('submit', handleStaffSubmit);
 
-            // Listen to Staff Collection
+            // Listeners
             onSnapshot(collection(db, 'staff'), (snapshot) => {
-                const staffList = [];
-                snapshot.forEach(doc => staffList.push({ id: doc.id, ...doc.data() }));
-                renderStaff(staffList);
-            }, (error) => {
-                console.error("Staff fetch error:", error);
-                document.getElementById('staff-container').innerHTML = `<p class="text-red-500 text-sm">Failed to load staff. Check Firebase permissions.</p>`;
+                globalStaff = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                refreshAllViews();
             });
 
-            // Listen to Logs Collection (Sorting done in memory to avoid Firebase index requirements)
             onSnapshot(collection(db, 'logs'), (snapshot) => {
-                const logsList = [];
-                snapshot.forEach(doc => logsList.push({ id: doc.id, ...doc.data() }));
-                
-                // Sort descending by timestamp
-                logsList.sort((a, b) => b.timestamp - a.timestamp);
-                renderLogs(logsList);
-            }, (error) => {
-                console.error("Logs fetch error:", error);
-                document.getElementById('logs-container').innerHTML = `<p class="text-red-500 text-sm">Failed to load logs. Check Firebase permissions.</p>`;
+                globalLogs = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                globalLogs.sort((a, b) => b.timestamp - a.timestamp); // Sort newest first
+                refreshAllViews();
             });
         }
 
-        async function handleAddStaff(e) {
-            e.preventDefault();
-            const input = document.getElementById('new-staff-name');
-            const name = input.value.trim();
-            if (!name) return;
+        // --- DATA RENDERING ---
+        function refreshAllViews() {
+            renderDashboard();
+            renderLogs();
+            renderStaff();
+            renderPayroll();
+        }
 
-            const btn = e.target.querySelector('button');
-            const originalText = btn.innerText;
-            btn.innerText = "...";
-            btn.disabled = true;
+        function renderDashboard() {
+            const todayStart = new Date();
+            todayStart.setHours(0, 0, 0, 0);
+            
+            const todayLogs = globalLogs.filter(log => log.timestamp >= todayStart.getTime());
+            
+            // Present = Unique staff IDs who checked IN today
+            const presentStaffIds = new Set(todayLogs.filter(l => l.action === 'Check-In').map(l => l.staffId));
+            
+            // Late = Count of Check-ins today that have status starting with 'Late'
+            const lateCount = todayLogs.filter(l => l.action === 'Check-In' && l.status && l.status.startsWith('Late')).length;
+            
+            const totalStaff = globalStaff.length;
+            const absentCount = Math.max(0, totalStaff - presentStaffIds.size);
 
-            try {
-                await addDoc(collection(db, 'staff'), { name: name, createdAt: Date.now() });
-                input.value = '';
-            } catch (error) {
-                alert("Failed to add staff: " + error.message);
-            } finally {
-                btn.innerText = originalText;
-                btn.disabled = false;
+            document.getElementById('stat-total-staff').innerText = totalStaff;
+            document.getElementById('stat-present').innerText = presentStaffIds.size;
+            document.getElementById('stat-late').innerText = lateCount;
+            document.getElementById('stat-absent').innerText = absentCount;
+
+            // Render Recent Feed (Top 5)
+            const feedContainer = document.getElementById('dashboard-feed');
+            if (globalLogs.length === 0) {
+                feedContainer.innerHTML = `<div class="text-sm text-gray-500 text-center py-2">No activity yet.</div>`;
+            } else {
+                feedContainer.innerHTML = globalLogs.slice(0, 5).map(log => {
+                    const isLate = log.status && log.status.startsWith('Late');
+                    const isCheckIn = log.action === 'Check-In';
+                    const icon = isCheckIn ? 'fa-right-to-bracket text-green-500' : 'fa-person-walking-arrow-right text-orange-500';
+                    const bgBadge = isLate ? 'bg-red-100 text-red-700 border-red-200' : 'bg-gray-100 text-gray-600 border-gray-200';
+                    
+                    return `
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center gap-3">
+                            <i class="fa-solid ${icon}"></i>
+                            <div>
+                                <p class="text-sm font-bold text-cafe-900">${log.staffName}</p>
+                                <p class="text-xs text-gray-500">${new Date(log.timestamp).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</p>
+                            </div>
+                        </div>
+                        <div class="text-[10px] font-bold uppercase tracking-wider px-2 py-1 border rounded ${bgBadge}">
+                            ${isLate ? log.status : log.action}
+                        </div>
+                    </div>`;
+                }).join('<hr class="border-gray-100 border-dashed">');
             }
         }
 
-        function renderStaff(staffList) {
-            const container = document.getElementById('staff-container');
-            if (staffList.length === 0) {
-                container.innerHTML = `<p class="text-gray-500 text-center py-4 text-sm">No staff added yet.</p>`;
+        function renderLogs() {
+            const container = document.getElementById('logs-container');
+            if (globalLogs.length === 0) {
+                container.innerHTML = `<p class="text-gray-500 text-center py-4 text-sm italic">No records found.</p>`;
                 return;
             }
 
-            container.innerHTML = staffList.map(staff => `
-                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center p-3 bg-gray-50 rounded-lg border border-gray-100 gap-3">
-                    <div class="font-bold text-cafe-800 text-lg flex items-center">
-                        <div class="w-8 h-8 rounded-full bg-cafe-100 text-cafe-600 flex items-center justify-center mr-3 text-sm">
-                            <i class="fa-solid fa-user"></i>
-                        </div>
-                        ${staff.name}
+            container.innerHTML = globalLogs.map(log => {
+                const isCheckIn = log.action === 'Check-In';
+                const isLate = log.status && log.status.startsWith('Late');
+                const borderColor = isLate ? 'border-red-300 bg-red-50' : (isCheckIn ? 'border-green-100 bg-green-50' : 'border-orange-100 bg-orange-50');
+                const textCol = isLate ? 'text-red-700' : (isCheckIn ? 'text-green-700' : 'text-orange-700');
+                
+                return `
+                <div class="flex justify-between items-center p-3 rounded-lg border ${borderColor}">
+                    <div>
+                        <div class="font-bold text-cafe-900">${log.staffName}</div>
+                        <div class="text-xs font-bold uppercase ${textCol}">${isLate ? `<i class="fa-solid fa-warning mr-1"></i> ${log.status}` : log.action}</div>
                     </div>
-                    <div class="flex gap-2 w-full sm:w-auto">
-                        <button onclick="window.openQrModal('${staff.id}', '${staff.name}', 'in')" class="flex-1 sm:flex-none px-3 py-1.5 bg-green-100 text-green-700 hover:bg-green-200 rounded text-sm font-semibold transition-colors">
+                    <div class="text-right">
+                        <div class="text-sm font-bold text-cafe-800">${new Date(log.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</div>
+                        <div class="text-xs text-gray-500">${new Date(log.timestamp).toLocaleDateString()}</div>
+                    </div>
+                </div>`;
+            }).join('');
+        }
+
+        function renderStaff() {
+            const container = document.getElementById('staff-container');
+            if (globalStaff.length === 0) {
+                container.innerHTML = `<div class="col-span-2 text-center text-gray-500 py-8">No staff added yet. Click 'Add Staff' to begin.</div>`;
+                return;
+            }
+
+            container.innerHTML = globalStaff.map(staff => `
+                <div class="bg-white p-4 rounded-xl shadow-sm border border-cafe-100 flex flex-col justify-between">
+                    <div class="flex justify-between items-start mb-3 border-b pb-3">
+                        <div>
+                            <div class="font-black text-lg text-cafe-900">${staff.name}</div>
+                            <div class="text-xs text-gray-500 mt-1"><i class="fa-regular fa-clock mr-1"></i> Shift: ${staff.shiftStart || '06:00'} - ${staff.shiftEnd || '15:00'}</div>
+                            <div class="text-xs text-gray-500 mt-1"><i class="fa-solid fa-dollar-sign mr-1"></i> Base: $${staff.salary || '0'}/mo</div>
+                        </div>
+                        <div class="flex gap-2">
+                            <button onclick="window.editStaffUI('${staff.id}')" class="text-blue-500 hover:text-blue-700 bg-blue-50 w-8 h-8 rounded-full flex items-center justify-center transition-colors"><i class="fa-solid fa-pen text-sm"></i></button>
+                            <button onclick="window.deleteStaffDB('${staff.id}')" class="text-red-500 hover:text-red-700 bg-red-50 w-8 h-8 rounded-full flex items-center justify-center transition-colors"><i class="fa-solid fa-trash text-sm"></i></button>
+                        </div>
+                    </div>
+                    <div class="flex gap-2 w-full mt-auto">
+                        <button onclick="window.openQrModal('${staff.id}', '${staff.name}', 'in')" class="flex-1 py-2 bg-green-50 text-green-700 border border-green-200 hover:bg-green-100 rounded-lg text-xs font-bold transition-colors">
                             <i class="fa-solid fa-qrcode mr-1"></i> QR IN
                         </button>
-                        <button onclick="window.openQrModal('${staff.id}', '${staff.name}', 'out')" class="flex-1 sm:flex-none px-3 py-1.5 bg-orange-100 text-orange-700 hover:bg-orange-200 rounded text-sm font-semibold transition-colors">
+                        <button onclick="window.openQrModal('${staff.id}', '${staff.name}', 'out')" class="flex-1 py-2 bg-orange-50 text-orange-700 border border-orange-200 hover:bg-orange-100 rounded-lg text-xs font-bold transition-colors">
                             <i class="fa-solid fa-qrcode mr-1"></i> QR OUT
                         </button>
                     </div>
@@ -333,83 +489,140 @@
             `).join('');
         }
 
-        function renderLogs(logsList) {
-            const container = document.getElementById('logs-container');
-            if (logsList.length === 0) {
-                container.innerHTML = `<p class="text-gray-500 text-center py-4 text-sm italic">No attendance records yet.</p>`;
+        function renderPayroll() {
+            const tbody = document.getElementById('payroll-table-body');
+            const d = new Date();
+            document.getElementById('payroll-month-label').innerText = d.toLocaleString('default', { month: 'long', year: 'numeric' });
+            
+            const currentMonth = d.getMonth();
+            const currentYear = d.getFullYear();
+
+            // Filter logs for this month
+            const monthLogs = globalLogs.filter(log => {
+                const ld = new Date(log.timestamp);
+                return ld.getMonth() === currentMonth && ld.getFullYear() === currentYear;
+            });
+
+            if (globalStaff.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="5" class="p-4 text-center text-gray-500">No staff found.</td></tr>`;
                 return;
             }
 
-            container.innerHTML = logsList.map(log => {
-                const isCheckIn = log.action === 'Check-In';
-                const colorClass = isCheckIn ? 'text-green-600 bg-green-50 border-green-100' : 'text-orange-600 bg-orange-50 border-orange-100';
-                const iconClass = isCheckIn ? 'fa-right-to-bracket' : 'fa-person-walking-arrow-right';
-                const dateObj = new Date(log.timestamp);
+            tbody.innerHTML = globalStaff.map(staff => {
+                const staffLogs = monthLogs.filter(l => l.staffId === staff.id);
                 
+                // Count unique days present (based on check-in)
+                const checkIns = staffLogs.filter(l => l.action === 'Check-In');
+                const presentDates = new Set(checkIns.map(l => new Date(l.timestamp).toDateString()));
+                const daysPresent = presentDates.size;
+
+                // Count Late instances
+                const lateInstances = checkIns.filter(l => l.status && l.status.startsWith('Late')).length;
+
+                // Estimate Pay (Base Salary / 30 * days present)
+                const baseSal = parseFloat(staff.salary) || 0;
+                const dailyRate = baseSal / 30;
+                const estEarnings = (dailyRate * daysPresent).toFixed(2);
+
                 return `
-                <div class="flex justify-between items-center p-3 rounded-lg border ${colorClass}">
-                    <div class="flex items-center gap-3">
-                        <div class="w-8 h-8 rounded-full bg-white flex items-center justify-center shadow-sm">
-                            <i class="fa-solid ${iconClass}"></i>
-                        </div>
-                        <div>
-                            <div class="font-bold text-cafe-900">${log.staffName}</div>
-                            <div class="text-xs font-semibold uppercase tracking-wider">${log.action}</div>
-                        </div>
-                    </div>
-                    <div class="text-right">
-                        <div class="text-sm font-bold text-cafe-800">${dateObj.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</div>
-                        <div class="text-xs text-gray-500">${dateObj.toLocaleDateString()}</div>
-                    </div>
-                </div>`;
+                <tr class="hover:bg-gray-50 transition-colors">
+                    <td class="p-3 font-bold text-cafe-900">${staff.name}</td>
+                    <td class="p-3 text-gray-600">$${baseSal}</td>
+                    <td class="p-3"><span class="bg-green-100 text-green-800 px-2 py-1 rounded text-xs font-bold">${daysPresent} Days</span></td>
+                    <td class="p-3">${lateInstances > 0 ? `<span class="text-red-600 font-bold"><i class="fa-solid fa-warning text-xs"></i> ${lateInstances}</span>` : '<span class="text-gray-400">-</span>'}</td>
+                    <td class="p-3 text-right font-black text-cafe-800">$${estEarnings}</td>
+                </tr>`;
             }).join('');
         }
 
-    </script>
+        // --- CRUD ACTIONS ---
+        async function handleStaffSubmit(e) {
+            e.preventDefault();
+            const id = document.getElementById('staff-id-input').value;
+            const name = document.getElementById('staff-name-input').value.trim();
+            const start = document.getElementById('staff-start-input').value;
+            const end = document.getElementById('staff-end-input').value;
+            const salary = document.getElementById('staff-salary-input').value;
 
-    <!-- Global UI Scripts (Tabs & Modal) -->
-    <script>
-        // Tab Switching logic
-        function switchTab(tab) {
-            document.getElementById('section-logs').classList.add('hidden');
-            document.getElementById('section-staff').classList.add('hidden');
-            document.getElementById('tab-logs').className = 'flex-1 py-3 text-center tab-inactive transition-colors';
-            document.getElementById('tab-staff').className = 'flex-1 py-3 text-center tab-inactive transition-colors';
+            const btn = document.getElementById('staff-submit-btn');
+            btn.disabled = true; btn.innerText = "Saving...";
 
-            if (tab === 'logs') {
-                document.getElementById('section-logs').classList.remove('hidden');
-                document.getElementById('tab-logs').className = 'flex-1 py-3 text-center tab-active transition-colors';
-            } else {
-                document.getElementById('section-staff').classList.remove('hidden');
-                document.getElementById('tab-staff').className = 'flex-1 py-3 text-center tab-active transition-colors';
+            try {
+                const payload = { name, shiftStart: start, shiftEnd: end, salary: Number(salary) };
+                if (id) {
+                    await updateDoc(doc(db, 'staff', id), payload);
+                } else {
+                    await addDoc(collection(db, 'staff'), { ...payload, createdAt: Date.now() });
+                }
+                closeStaffModal();
+            } catch (error) {
+                alert("Error saving staff: " + error.message);
+            } finally {
+                btn.disabled = false; btn.innerText = "Save Staff";
             }
         }
 
-        // QR Modal logic exposed to window so inline onclick can use it
+        window.deleteStaffDB = async (id) => {
+            if (confirm("Are you sure you want to delete this staff member? This cannot be undone.")) {
+                try {
+                    await deleteDoc(doc(db, 'staff', id));
+                } catch(e) { alert("Failed to delete."); }
+            }
+        };
+
+        window.editStaffUI = (id) => {
+            const staff = globalStaff.find(s => s.id === id);
+            if(staff) {
+                document.getElementById('staff-id-input').value = staff.id;
+                document.getElementById('staff-name-input').value = staff.name;
+                document.getElementById('staff-start-input').value = staff.shiftStart || "06:00";
+                document.getElementById('staff-end-input').value = staff.shiftEnd || "15:00";
+                document.getElementById('staff-salary-input').value = staff.salary || "";
+                document.getElementById('staff-modal-title').innerText = "Edit Staff";
+                document.getElementById('staff-modal').classList.remove('hidden');
+            }
+        };
+
+    </script>
+
+    <!-- Global UI Scripts (Tabs & Modals) -->
+    <script>
+        // Tab Management
+        const tabs = ['dashboard', 'logs', 'staff', 'payroll'];
+        function switchTab(activeId) {
+            tabs.forEach(tab => {
+                document.getElementById(`section-${tab}`).classList.add('hidden');
+                document.getElementById(`tab-${tab}`).classList.replace('tab-active', 'tab-inactive');
+            });
+            document.getElementById(`section-${activeId}`).classList.remove('hidden');
+            document.getElementById(`tab-${activeId}`).classList.replace('tab-inactive', 'tab-active');
+        }
+
+        // Modal Management
+        function openStaffModal() {
+            document.getElementById('staff-form').reset();
+            document.getElementById('staff-id-input').value = '';
+            document.getElementById('staff-modal-title').innerText = "Add New Staff";
+            document.getElementById('staff-modal').classList.remove('hidden');
+        }
+
+        function closeStaffModal() {
+            document.getElementById('staff-modal').classList.add('hidden');
+        }
+
+        // QR System exposed globally
         window.openQrModal = function(staffId, staffName, action) {
             const modal = document.getElementById('qr-modal');
-            const title = document.getElementById('qr-title');
-            const subtitle = document.getElementById('qr-subtitle');
-            const img = document.getElementById('qr-image');
-            
-            // Get base URL (without any existing parameters)
             const baseUrl = window.location.href.split('?')[0];
-            
-            // Construct the unique link for the QR Code
             const targetUrl = `${baseUrl}?staffId=${staffId}&action=${action}`;
             
-            // Update UI
-            const actionText = action === 'in' ? 'CHECK-IN' : 'CHECK-OUT';
-            title.innerText = staffName;
-            subtitle.innerHTML = `Scan to <span class="font-bold ${action === 'in' ? 'text-green-600' : 'text-orange-600'}">${actionText}</span>`;
-            
-            // Generate QR Code via API
-            img.src = `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(targetUrl)}`;
-            
+            document.getElementById('qr-title').innerText = staffName;
+            document.getElementById('qr-subtitle').innerHTML = `Scan to <span class="font-bold uppercase ${action === 'in' ? 'text-green-600' : 'text-orange-600'}">${action === 'in' ? 'Check-In' : 'Check-Out'}</span>`;
+            document.getElementById('qr-image').src = `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(targetUrl)}`;
             modal.classList.remove('hidden');
         };
 
-        window.closeModal = function() {
+        window.closeQrModal = function() {
             document.getElementById('qr-modal').classList.add('hidden');
             document.getElementById('qr-image').src = '';
         };
