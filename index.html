@@ -513,7 +513,15 @@
                     if (now > shiftTime.getTime() + (10 * 60000)) {
                         isLate = true;
                         diffMins = Math.floor((now - shiftTime.getTime()) / 60000);
-                        statusDetail = `Late (${diffMins}m)`;
+                        
+                        // Format into hours and mins if >= 60
+                        if (diffMins >= 60) {
+                            const hrs = Math.floor(diffMins / 60);
+                            const mns = diffMins % 60;
+                            statusDetail = `Late (${hrs}h ${mns}m)`;
+                        } else {
+                            statusDetail = `Late (${diffMins}m)`;
+                        }
                     }
                 }
 
@@ -548,13 +556,16 @@
         }
 
         async function sendTelegramAlert(staffName, action, isLate, statusDetail, diffMins = 0) {
+            const timeStr = new Date().toLocaleTimeString('en-US');
             const emoji = action === 'Check-In' ? '🟢' : '🔴';
             const displayStatus = isLate ? statusDetail : action;
             
-            let text = `${emoji} <b>${staffName}</b>: ${displayStatus}`;
+            let text = `${emoji} <b>${staffName}</b>\n`;
+            text += `📋 <b>Status:</b> ${displayStatus}\n`;
+            text += `⏰ <b>Time:</b> ${timeStr}`;
             
             if (isLate && diffMins > 20) {
-                text += `\n🚨 <b>Please come to shop, your late ${diffMins}min!</b>`;
+                text += `\n\n🚨 <b>Please come to shop, your late ${diffMins}min!</b>`;
             }
             
             const url = `https://api.telegram.org/bot${TELEGRAM_TOKEN}/sendMessage`;
@@ -641,7 +652,49 @@
             renderStaff();
             renderPayrollAndChart();
             renderDayoffs();
+            checkAndAnnounceTodaysDayOffs();
         }
+
+        window.checkAndAnnounceTodaysDayOffs = async function() {
+            if (globalStaff.length === 0 || globalDayOffs.length === 0) return;
+
+            const today = new Date();
+            const todayStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+
+            const lastAnnouncement = localStorage.getItem('lastDayOffAnnouncement');
+            if (lastAnnouncement === todayStr) return; // Already announced today
+
+            const todaysOffs = globalDayOffs.filter(d => d.date === todayStr);
+
+            if (todaysOffs.length > 0) {
+                const timeStr = new Date().toLocaleTimeString('en-US');
+                let text = `🏖️ <b>Today's Day-Off Announcement</b>\n📅 ${today.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}\n\n`;
+
+                let foundStaff = false;
+                todaysOffs.forEach(dOff => {
+                    const staff = globalStaff.find(s => s.id === dOff.staffId);
+                    if (staff) {
+                        text += `🔵 <b>${staff.name}</b>\n`;
+                        text += `📋 <b>Status:</b> Day-Off\n`;
+                        text += `⏰ <b>Time:</b> ${timeStr}\n\n`;
+                        foundStaff = true;
+                    }
+                });
+
+                if (foundStaff) {
+                    const url = `https://api.telegram.org/bot${TELEGRAM_TOKEN}/sendMessage`;
+                    try {
+                        await fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ chat_id: TELEGRAM_CHAT_ID, text: text, parse_mode: 'HTML' }) });
+                        localStorage.setItem('lastDayOffAnnouncement', todayStr); // Mark as announced
+                    } catch(e) {
+                        console.error("Failed to announce day offs", e);
+                    }
+                }
+            } else {
+                // Mark checked to avoid unnecessary processing next time
+                localStorage.setItem('lastDayOffAnnouncement', todayStr); 
+            }
+        };
 
         function populateStaffDropdown() {
             const select = document.getElementById('dayoff-staff-input');
@@ -1029,8 +1082,13 @@
         }
 
         window.sendSingleDayoffToTelegram = async (staffName, date, showSuccessAlert = false) => {
-            const dateStr = new Date(date).toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
-            const text = `🏖️ <b>Day-Off Notice</b>\n\n🧑‍🍳 <b>Name:</b> ${staffName}\n🔵 <b>Status:</b> Day-Off\n📅 <b>Day:</b> ${dateStr}`;
+            const timeStr = new Date().toLocaleTimeString('en-US');
+            const dateStr = new Date(date).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
+            
+            let text = `🔵 <b>${staffName}</b>\n`;
+            text += `📋 <b>Status:</b> Day-Off (${dateStr})\n`;
+            text += `⏰ <b>Time:</b> ${timeStr}`;
+
             const url = `https://api.telegram.org/bot${TELEGRAM_TOKEN}/sendMessage`;
             
             try {
