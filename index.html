@@ -108,9 +108,14 @@
                             <h2 class="font-bold text-slate-800 text-lg"><i class="fa-solid fa-star-half-stroke mr-2 text-yellow-500"></i> Staff Performance Evaluation</h2>
                             <p class="text-xs text-slate-500 mt-1">Evaluated based on Monthly Late instances (Good, Nice, Bad)</p>
                         </div>
-                        <button onclick="window.broadcastPerformanceToTelegram()" class="bg-brand-50 text-brand-700 hover:bg-brand-100 border border-brand-200 px-4 py-2 rounded-xl text-sm font-bold shadow-sm transition-colors">
-                            <i class="fa-solid fa-paper-plane mr-1"></i> Send Report
-                        </button>
+                        <div class="flex gap-2">
+                            <button onclick="window.broadcastPerformanceToTelegram('week')" class="bg-brand-50 text-brand-700 hover:bg-brand-100 border border-brand-200 px-3 py-2 rounded-xl text-xs font-bold shadow-sm transition-colors">
+                                <i class="fa-solid fa-paper-plane mr-1"></i> Send Week
+                            </button>
+                            <button onclick="window.broadcastPerformanceToTelegram('month')" class="bg-brand-50 text-brand-700 hover:bg-brand-100 border border-brand-200 px-3 py-2 rounded-xl text-xs font-bold shadow-sm transition-colors">
+                                <i class="fa-solid fa-paper-plane mr-1"></i> Send Month
+                            </button>
+                        </div>
                     </div>
                     <div class="overflow-x-auto">
                         <table class="w-full text-left text-sm">
@@ -224,8 +229,11 @@
                 <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
                     <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-5 border-b border-slate-100 pb-4 gap-4">
                         <div>
-                            <h2 class="font-bold text-slate-800 text-lg"><i class="fa-solid fa-calendar-day mr-2 text-purple-500"></i> Day-Off Roster</h2>
-                            <p class="text-xs text-slate-500 mt-1">Manage approved leaves and weekly off-days.</p>
+                            <div class="flex items-center gap-3">
+                                <h2 class="font-bold text-slate-800 text-lg"><i class="fa-solid fa-calendar-day mr-2 text-purple-500"></i> Day-Off Roster</h2>
+                                <input type="month" id="dayoff-month-filter" class="text-xs font-bold bg-purple-50 text-purple-700 border border-purple-200 px-3 py-1 rounded-full shadow-sm outline-none cursor-pointer" onchange="window.renderDayoffs()">
+                            </div>
+                            <p class="text-xs text-slate-500 mt-1">Manage approved leaves. Dates cannot overlap.</p>
                         </div>
                         <div class="flex flex-wrap gap-2">
                             <button onclick="toggleDayoffView()" class="bg-slate-100 text-slate-700 px-4 py-2 rounded-xl text-sm font-bold shadow-sm hover:bg-slate-200 transition-colors border border-slate-200">
@@ -241,6 +249,16 @@
                                 <i class="fa-solid fa-plus mr-1"></i> Assign 1 Day
                             </button>
                         </div>
+                    </div>
+                    <div id="dayoff-actions-bar" class="flex gap-4 items-center bg-slate-50 px-4 py-2 rounded-xl border border-slate-200 mb-3">
+                        <label class="flex items-center gap-2 text-sm cursor-pointer text-slate-700 font-semibold select-none">
+                            <input type="checkbox" id="selectAllDayoffs" onclick="window.toggleSelectAllDayoffs(this)" class="w-4 h-4 rounded border-slate-300 text-purple-600 focus:ring-purple-500">
+                            Select All
+                        </label>
+                        <div class="w-px h-6 bg-slate-300"></div>
+                        <button onclick="window.deleteSelectedDayoffs()" class="text-rose-600 text-sm font-bold hover:text-rose-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center" id="btn-delete-selected-dayoffs" disabled>
+                            <i class="fa-solid fa-trash mr-1.5"></i> Delete Selected
+                        </button>
                     </div>
                     <div id="dayoff-container" class="space-y-3">
                         <!-- Day offs injected here -->
@@ -778,23 +796,17 @@
                 const monthLate = monthLogs.filter(l => l.status && l.status.startsWith('Late')).length;
                 const weekLate = weekLogs.filter(l => l.status && l.status.startsWith('Late')).length;
 
-                // Evaluate based on Month Lates
-                let evalText = 'Good';
-                let evalClass = 'bg-emerald-100 text-emerald-800 border-emerald-200';
-                
-                if (monthLate >= 4) {
-                    evalText = 'Bad';
-                    evalClass = 'bg-rose-100 text-rose-800 border-rose-200';
-                } else if (monthLate >= 2) {
-                    evalText = 'Nice';
-                    evalClass = 'bg-yellow-100 text-yellow-800 border-yellow-200';
-                }
+                // Evaluate Month Lates
+                let monthEvalText = monthLate >= 4 ? 'Bad' : (monthLate >= 2 ? 'Nice' : 'Good');
+                let monthEvalClass = monthLate >= 4 ? 'bg-rose-100 text-rose-800 border-rose-200' : (monthLate >= 2 ? 'bg-yellow-100 text-yellow-800 border-yellow-200' : 'bg-emerald-100 text-emerald-800 border-emerald-200');
+
+                // Evaluate Week Lates (Proportional: >=2 is Bad, 1 is Nice, 0 is Good)
+                let weekEvalText = weekLate >= 2 ? 'Bad' : (weekLate >= 1 ? 'Nice' : 'Good');
 
                 window.currentPerformanceData.push({
                     name: staff.name,
-                    monthPresent: monthLogs.length,
-                    monthLate: monthLate,
-                    evaluation: evalText
+                    weekEval: weekEvalText,
+                    monthEval: monthEvalText
                 });
 
                 html += `
@@ -806,8 +818,11 @@
                     <td class="p-4 text-slate-600"><span class="text-emerald-600 font-bold px-2">${weekLogs.length}</span> / <span class="text-rose-500 font-bold px-2">${weekLate}</span></td>
                     <td class="p-4 text-slate-600"><span class="text-emerald-600 font-bold px-2">${monthLogs.length}</span> / <span class="text-rose-500 font-bold px-2">${monthLate}</span></td>
                     <td class="p-4 flex justify-between items-center">
-                        <span class="${evalClass} border px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider shadow-sm">${evalText}</span>
-                        <button onclick="window.sendSinglePerformance('${staff.name}', ${monthLogs.length}, ${monthLate}, '${evalText}')" class="text-brand-500 hover:text-brand-700 bg-brand-50 w-8 h-8 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all border border-brand-100 hover:border-brand-300 shadow-sm" title="Send Report to Telegram"><i class="fa-solid fa-paper-plane text-xs"></i></button>
+                        <span class="${monthEvalClass} border px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider shadow-sm">${monthEvalText}</span>
+                        <div class="opacity-0 group-hover:opacity-100 transition-opacity flex gap-1">
+                            <button onclick="window.sendSinglePerformance('${staff.name}', 'week')" class="text-brand-500 hover:text-brand-700 bg-brand-50 w-7 h-7 rounded-full flex items-center justify-center transition-all border border-brand-100 hover:border-brand-300 shadow-sm" title="Send Week Report"><span class="font-bold text-[10px]">W</span></button>
+                            <button onclick="window.sendSinglePerformance('${staff.name}', 'month')" class="text-brand-500 hover:text-brand-700 bg-brand-50 w-7 h-7 rounded-full flex items-center justify-center transition-all border border-brand-100 hover:border-brand-300 shadow-sm" title="Send Month Report"><span class="font-bold text-[10px]">M</span></button>
+                        </div>
                     </td>
                 </tr>`;
             });
@@ -977,17 +992,43 @@
             });
         }
 
-        function renderDayoffs() {
+        function getSelectedDayoffMonth() {
+            const filterInput = document.getElementById('dayoff-month-filter');
+            if (filterInput && filterInput.value) {
+                const [year, month] = filterInput.value.split('-');
+                return new Date(year, parseInt(month) - 1, 1);
+            }
+            return new Date();
+        }
+
+        window.renderDayoffs = function() {
+            const d = getSelectedDayoffMonth();
+            const currentMonth = d.getMonth();
+            const currentYear = d.getFullYear();
+
+            const filterInput = document.getElementById('dayoff-month-filter');
+            if (filterInput && !filterInput.value) {
+                filterInput.value = `${currentYear}-${String(currentMonth + 1).padStart(2, '0')}`;
+            }
+
+            const monthDayOffs = globalDayOffs.filter(day => {
+                const dd = new Date(day.date);
+                return dd.getMonth() === currentMonth && dd.getFullYear() === currentYear;
+            });
+
             const container = document.getElementById('dayoff-container');
-            if (globalDayOffs.length === 0) {
-                container.innerHTML = `<p class="text-slate-500 text-center py-6 font-medium">No day-offs assigned yet.</p>`;
+            if (monthDayOffs.length === 0) {
+                container.innerHTML = `<p class="text-slate-500 text-center py-6 font-medium">No day-offs assigned for this month.</p>`;
+                const btn = document.getElementById('btn-delete-selected-dayoffs');
+                if (btn) btn.disabled = true;
             } else {
-                container.innerHTML = globalDayOffs.map(day => {
+                container.innerHTML = monthDayOffs.map(day => {
                     const staff = globalStaff.find(s => s.id === day.staffId);
                     const sName = staff ? staff.name : 'Unknown Staff';
                     return `
                     <div class="flex justify-between items-center p-4 rounded-2xl border border-brand-100 bg-white shadow-sm group hover:shadow transition-shadow">
                         <div class="flex items-center gap-3">
+                            <input type="checkbox" class="dayoff-checkbox w-4 h-4 rounded border-slate-300 text-purple-600 focus:ring-purple-500 cursor-pointer" value="${day.id}" onchange="window.updateDeleteDayoffButtonState()">
                             <div class="w-8 h-8 rounded-full bg-brand-50 flex items-center justify-center text-brand-500 border border-brand-100"><i class="fa-solid fa-umbrella-beach text-[10px]"></i></div>
                             <div>
                                 <div class="font-bold text-brand-900">${sName}</div>
@@ -1001,13 +1042,13 @@
                     </div>`;
                 }).join('');
             }
-            renderCalendar();
+            window.updateDeleteDayoffButtonState();
+            renderCalendar(d);
         }
 
-        function renderCalendar() {
+        function renderCalendar(d) {
             const calContainer = document.getElementById('dayoff-calendar-view');
             if(!calContainer) return;
-            const d = new Date();
             const currentMonth = d.getMonth();
             const currentYear = d.getFullYear();
 
@@ -1123,6 +1164,13 @@
                 alert("Error: Staff cannot take day-offs on Saturdays or Sundays.");
                 return;
             }
+            
+            // Check for overlap (no two staff can have the same day off)
+            const isOverlap = globalDayOffs.some(d => d.date === date);
+            if (isOverlap) {
+                alert("Error: Another staff member already has a day-off on this date. Day-offs cannot overlap.");
+                return;
+            }
 
             const btn = document.getElementById('dayoff-submit-btn');
             btn.disabled = true; btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin mr-2"></i> Assigning...`;
@@ -1155,12 +1203,13 @@
                     // Skip weekends (0 = Sunday, 6 = Saturday)
                     if (dObj.getDay() === 0 || dObj.getDay() === 6) continue;
 
-                    const alreadyOff = globalDayOffs.some(d => d.staffId === staffId && d.date === dateStr);
+                    // Prevent overlap globally (no other staff can have this date)
+                    const alreadyOff = globalDayOffs.some(d => d.date === dateStr);
                     if(!alreadyOff) availableDays.push(dateStr);
                 }
 
                 if (availableDays.length < count) {
-                    alert(`Not enough available weekdays to generate ${count} days off.\n\nNote: Sat and Sun are not allowed for dayoffs.`);
+                    alert(`Not enough available weekdays to generate ${count} days off.\n\nNote: Sat and Sun are not allowed, and dates cannot overlap with existing day-offs.`);
                     btn.disabled = false; btn.innerText = "Generate";
                     return;
                 }
@@ -1272,6 +1321,48 @@
             }
         };
 
+        window.toggleSelectAllDayoffs = function(checkbox) {
+            const checkboxes = document.querySelectorAll('.dayoff-checkbox');
+            checkboxes.forEach(cb => cb.checked = checkbox.checked);
+            window.updateDeleteDayoffButtonState();
+        };
+
+        window.updateDeleteDayoffButtonState = function() {
+            const checkboxes = document.querySelectorAll('.dayoff-checkbox:checked');
+            const totalCb = document.querySelectorAll('.dayoff-checkbox');
+            const btn = document.getElementById('btn-delete-selected-dayoffs');
+            const selectAllCb = document.getElementById('selectAllDayoffs');
+            
+            if(btn) btn.disabled = checkboxes.length === 0;
+            if(selectAllCb && totalCb.length > 0) {
+                selectAllCb.checked = checkboxes.length === totalCb.length;
+            }
+        };
+
+        window.deleteSelectedDayoffs = async function() {
+            const checkboxes = document.querySelectorAll('.dayoff-checkbox:checked');
+            const idsToDelete = Array.from(checkboxes).map(cb => cb.value);
+            
+            if(idsToDelete.length === 0) return;
+            if(!confirm(`Are you sure you want to delete ${idsToDelete.length} selected day-offs?`)) return;
+
+            const btn = document.getElementById('btn-delete-selected-dayoffs');
+            const ogText = btn.innerHTML;
+            btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin mr-1"></i> Deleting...`;
+            btn.disabled = true;
+            
+            try {
+                for(const id of idsToDelete) {
+                    await deleteDoc(doc(db, 'dayoffs', id));
+                }
+                document.getElementById('selectAllDayoffs').checked = false;
+            } catch(e) {
+                alert("Error deleting day-offs.");
+            } finally {
+                btn.innerHTML = ogText;
+            }
+        };
+
         window.editStaffUI = (id) => {
             const staff = globalStaff.find(s => s.id === id);
             if(staff) {
@@ -1296,7 +1387,13 @@
         };
 
         window.broadcastRosterToTelegram = async () => {
-            const d = new Date();
+            const filterInput = document.getElementById('dayoff-month-filter');
+            let d = new Date();
+            if (filterInput && filterInput.value) {
+                const [year, month] = filterInput.value.split('-');
+                d = new Date(year, parseInt(month) - 1, 1);
+            }
+
             const monthName = d.toLocaleString('default', { month: 'long', year: 'numeric' });
             const currentMonth = d.getMonth();
             const currentYear = d.getFullYear();
@@ -1363,17 +1460,21 @@
             }
         };
 
-        window.broadcastPerformanceToTelegram = async () => {
+        window.broadcastPerformanceToTelegram = async (period) => {
             if (!window.currentPerformanceData || window.currentPerformanceData.length === 0) {
                 alert("No performance data available to send.");
                 return;
             }
 
-            const monthName = new Date().toLocaleString('default', { month: 'long', year: 'numeric' });
-            let text = `📊 <b>Performance ${monthName}</b>\n\n`;
+            const isWeek = period === 'week';
+            const periodStr = isWeek ? 'This Week' : new Date().toLocaleString('default', { month: 'long', year: 'numeric' });
+            
+            let text = `📊 <b>Performance ${periodStr}</b>\n\n`;
 
             window.currentPerformanceData.forEach(p => {
-                text += `🧑‍🍳 <b>${p.name}</b>: ${p.evaluation}\n`;
+                const evalText = isWeek ? p.weekEval : p.monthEval;
+                const colorCircle = evalText === 'Good' ? '🟢' : (evalText === 'Nice' ? '🟡' : '🔴');
+                text += `${colorCircle} <b>${p.name}</b>: ${evalText}\n`;
             });
 
             const btn = window.event ? window.event.currentTarget : null;
@@ -1403,23 +1504,29 @@
             }
         };
 
-        window.sendSinglePerformance = async (staffName, present, late, evaluation) => {
-            const monthName = new Date().toLocaleString('default', { month: 'long', year: 'numeric' });
-            
-            let text = `📊 <b>Performance ${monthName}</b>\n\n`;
-            text += `🧑‍🍳 <b>${staffName}</b>: ${evaluation}`;
+        window.sendSinglePerformance = async (staffName, period) => {
+            const p = window.currentPerformanceData.find(x => x.name === staffName);
+            if (!p) return;
+
+            const isWeek = period === 'week';
+            const periodStr = isWeek ? 'This Week' : new Date().toLocaleString('default', { month: 'long', year: 'numeric' });
+            const evalText = isWeek ? p.weekEval : p.monthEval;
+            const colorCircle = evalText === 'Good' ? '🟢' : (evalText === 'Nice' ? '🟡' : '🔴');
+
+            let text = `📊 <b>Performance ${periodStr}</b>\n\n`;
+            text += `${colorCircle} <b>${staffName}</b>: ${evalText}`;
 
             const btn = window.event ? window.event.currentTarget : null;
             
             const url = `https://api.telegram.org/bot${TELEGRAM_TOKEN}/sendMessage`;
             try {
-                if(btn) btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i>`;
+                if(btn) btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin text-[10px]"></i>`;
                 const response = await fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ chat_id: TELEGRAM_CHAT_ID, text: text, parse_mode: 'HTML' }) });
                 if (!response.ok) throw new Error("Telegram API Error");
-                if(btn) btn.innerHTML = `<i class="fa-solid fa-check text-emerald-500"></i>`;
-                setTimeout(() => { if(btn) btn.innerHTML = `<i class="fa-solid fa-paper-plane text-xs"></i>`; }, 2000);
+                if(btn) btn.innerHTML = `<i class="fa-solid fa-check text-emerald-500 text-[10px]"></i>`;
+                setTimeout(() => { if(btn) btn.innerHTML = `<span class="font-bold text-[10px]">${isWeek ? 'W' : 'M'}</span>`; }, 2000);
             } catch(e) {
-                if(btn) btn.innerHTML = `<i class="fa-solid fa-paper-plane text-xs"></i>`;
+                if(btn) btn.innerHTML = `<span class="font-bold text-[10px]">${isWeek ? 'W' : 'M'}</span>`;
                 alert("Failed to send report.");
             }
         };
@@ -1475,16 +1582,19 @@
         window.toggleDayoffView = () => {
             const listView = document.getElementById('dayoff-container');
             const calView = document.getElementById('dayoff-calendar-view');
+            const actionsBar = document.getElementById('dayoff-actions-bar');
             const toggleText = document.getElementById('view-toggle-text');
             const toggleIcon = document.getElementById('view-toggle-icon');
 
             if (listView.classList.contains('hidden')) {
                 listView.classList.remove('hidden');
+                actionsBar.classList.remove('hidden');
                 calView.classList.add('hidden');
                 toggleText.innerText = "Calendar View";
                 toggleIcon.className = "fa-solid fa-calendar mr-1";
             } else {
                 listView.classList.add('hidden');
+                actionsBar.classList.add('hidden');
                 calView.classList.remove('hidden');
                 toggleText.innerText = "List View";
                 toggleIcon.className = "fa-solid fa-list mr-1";
