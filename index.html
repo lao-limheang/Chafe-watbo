@@ -548,18 +548,15 @@
         }
 
         async function sendTelegramAlert(staffName, action, isLate, statusDetail, diffMins = 0) {
-            const timeStr = new Date().toLocaleTimeString('en-US');
-            let text = '';
-            if (isLate) {
-                if (diffMins > 20) {
-                    text = `⚠️ <b>URGENT LATE ALERT</b> ⚠️\n\n🧑‍🍳 <b>Staff:</b> ${staffName}\n🔴 <b>Status:</b> Check-In (${statusDetail})\n⏰ <b>Time:</b> ${timeStr}\n\n🚨 <b>Please come to shop, your late ${diffMins}min!</b>`;
-                } else {
-                    text = `⚠️ <b>LATE ALERT</b> ⚠️\n\n🧑‍🍳 <b>Staff:</b> ${staffName}\n🔴 <b>Status:</b> Check-In (${statusDetail})\n⏰ <b>Time:</b> ${timeStr}`;
-                }
-            } else {
-                const emoji = action === 'Check-In' ? '🟢' : '🟠';
-                text = `☕ <b>Attendance</b>\n\n🧑‍🍳 <b>Staff:</b> ${staffName}\n${emoji} <b>Status:</b> ${action}\n⏰ <b>Time:</b> ${timeStr}`;
+            const emoji = action === 'Check-In' ? '🟢' : '🔴';
+            const displayStatus = isLate ? statusDetail : action;
+            
+            let text = `${emoji} <b>${staffName}</b>: ${displayStatus}`;
+            
+            if (isLate && diffMins > 20) {
+                text += `\n🚨 <b>Please come to shop, your late ${diffMins}min!</b>`;
             }
+            
             const url = `https://api.telegram.org/bot${TELEGRAM_TOKEN}/sendMessage`;
             fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ chat_id: TELEGRAM_CHAT_ID, text: text, parse_mode: 'HTML' }) }).catch(e => console.error(e));
         }
@@ -1073,11 +1070,7 @@
             btn.disabled = true; btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin mr-2"></i> Assigning...`;
             try {
                 await addDoc(collection(db, 'dayoffs'), { staffId, date, reason, createdAt: Date.now() });
-                
-                // Auto alert to telegram for this dayoff
-                const staff = globalStaff.find(s => s.id === staffId);
-                if(staff) window.sendSingleDayoffToTelegram(staff.name, date, false);
-                
+                // Auto alert to telegram removed as requested
                 closeModal('dayoff-modal');
             } catch (error) { alert("Error: " + error.message); } 
             finally { btn.disabled = false; btn.innerText = "Assign"; }
@@ -1125,9 +1118,7 @@
                         reason: "Auto-generated Monthly Roster",
                         createdAt: Date.now()
                     });
-                    
-                    // Auto alert to telegram
-                    if(staff) window.sendSingleDayoffToTelegram(staff.name, dateStr, false);
+                    // Auto alert to telegram removed as requested
                 }
                 
                 alert(`Successfully generated ${pickedDays.length} days off!\n\nNote: Sat and Sun no dayoff (skipped automatically).`);
@@ -1321,14 +1312,10 @@
             }
 
             const monthName = new Date().toLocaleString('default', { month: 'long', year: 'numeric' });
-            let text = `📊 <b>Staff Performance Evaluation (${monthName})</b>\n\n`;
+            let text = `📊 <b>Performance ${monthName}</b>\n\n`;
 
             window.currentPerformanceData.forEach(p => {
-                let emoji = p.evaluation === 'Good' ? '🌟' : (p.evaluation === 'Nice' ? '👍' : '⚠️');
-                text += `🧑‍🍳 <b>${p.name}</b>\n`;
-                text += `   ├ Present: ${p.monthPresent} days\n`;
-                text += `   ├ Late: ${p.monthLate} times\n`;
-                text += `   └ Rating: ${emoji} <b>${p.evaluation}</b>\n\n`;
+                text += `🧑‍🍳 <b>${p.name}</b>: ${p.evaluation}\n`;
             });
 
             const btn = window.event ? window.event.currentTarget : null;
@@ -1360,13 +1347,9 @@
 
         window.sendSinglePerformance = async (staffName, present, late, evaluation) => {
             const monthName = new Date().toLocaleString('default', { month: 'long', year: 'numeric' });
-            let emoji = evaluation === 'Good' ? '🌟' : (evaluation === 'Nice' ? '👍' : '⚠️');
             
-            let text = `📊 <b>Performance Review (${monthName})</b>\n\n`;
-            text += `🧑‍🍳 <b>${staffName}</b>\n`;
-            text += `   ├ Present: ${present} days\n`;
-            text += `   ├ Late: ${late} times\n`;
-            text += `   └ Rating: ${emoji} <b>${evaluation}</b>`;
+            let text = `📊 <b>Performance ${monthName}</b>\n\n`;
+            text += `🧑‍🍳 <b>${staffName}</b>: ${evaluation}`;
 
             const btn = window.event ? window.event.currentTarget : null;
             
